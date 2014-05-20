@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# CONTEXT: GUEST during CONSTRUCTION as ROOT
+# PURPOSE: Set mongodb to start manual
+
+set -e
+set -o xtrace
+
+export DEBIAN_FRONTEND=noninteractive
+
+disable_service mongod
+disable_service mongodb
+
+disable_service() {
+    if [ -f "/etc/init/$1.conf" ]; then
+       echo manual >> "/etc/init/$1.conf"
+    else if [ -f "/etc/init.d/$1" ]; then
+       if [ -f "/usr/sbin/update-rc.d" ]; then
+           update-rc.d $1 defaults; sudo update-rc.d $1 disable
+       else if [ -f "/sbin/chkconfig" ]; then
+           sudo chkconfig $1 off
+       fi
+    else if [ -f "/lib/systemd/system/$1.service" ]; then
+        systemctl disable $1
+    fi
+}
