@@ -8,9 +8,6 @@ set -o xtrace
 
 export DEBIAN_FRONTEND=noninteractive
 
-disable_service mongod
-disable_service mongodb
-
 disable_service() {
     if [ -f "/etc/init/$1.conf" ]; then
        echo manual >> "/etc/init/$1.conf"
@@ -24,3 +21,6 @@ disable_service() {
         systemctl disable $1
     fi
 }
+
+disable_service mongod
+disable_service mongodb
