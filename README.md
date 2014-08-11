@@ -93,22 +93,6 @@ Allows the services to continue running in the background
 
 ***
 
-#### You may need to add this iptables rule, be sure to save it!
-
-    $ sudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
-
-#### Running the trove client (It's so easy!)
-*This sets of the authorization endpoint and gets a token for you*
-
-    $ ./redstack rd-client
-
-#### Running the nova client (It's so easy!)
-*This sets of the authorization endpoint and gets a token for you*
-
-    $ ./redstack nova-client
-
-***
-
 ### Reset your environment
 
 #### Stop all the services running in the screens and refresh the environment:
@@ -157,6 +141,22 @@ On a clean install of ubuntu 12.04 enable these options in VMware. (likey the sa
 5. Boot up the VM and run the `./redstack install`
 
 6. To verify that KVM is setup properly after the devstack installation you can run these commands.
+```
+ubuntu@ubuntu:~$ kvm-ok
+INFO: /dev/kvm exists
+KVM acceleration can be used
+```
+
+### VMware Workstation performance improvements
+
+In recent versions of VMWare, you can get much better performance if you enable the right virtualization options. For example in VMWare Workstation, (noticed in version 10.0.2), click on VM->Settings->Processor.
+
+You should see a box of "Virtualization Engine" options that can be changed only when the VM is shutdown.
+
+Make sure you check "Virtualize Intel VT-x/EPT or AMD-V/RVI" and "Virtualize CPU performance counters". Set the preferred mode to "Automatic".
+
+Then boot the VM and ensure that the proper virtualization is enabled.
+
 ```
 ubuntu@ubuntu:~$ kvm-ok
 INFO: /dev/kvm exists

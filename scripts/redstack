@@ -30,20 +30,23 @@ function get_default_host_ip() {
 # Load global configuration variables.
 . $REDSTACK_SCRIPTS/redstack.rc
 . $REDSTACK_SCRIPTS/reviews.rc
+
 # allow overrides from devstack if already set
-if [ -f $PATH_DEVSTACK_SRC/localrc ]; then
-    . $PATH_DEVSTACK_SRC/localrc
-fi
+[[ -f $PATH_DEVSTACK_SRC/functions-common ]] && source $PATH_DEVSTACK_SRC/functions-common
+[[ -f $PATH_DEVSTACK_SRC/functions ]] && source $PATH_DEVSTACK_SRC/functions
+[[ -f $PATH_DEVSTACK_SRC/localrc ]] && source $PATH_DEVSTACK_SRC/localrc
 
 # Public facing bits
+[[ $ENABLE_NEUTRON = true ]] && BRIDGE_IP=172.24.4.1 || BRIDGE_IP=10.0.0.1
 SERVICE_PROTOCOL=${SERVICE_PROTOCOL:-http}
 SERVICE_TENANT=${SERVICE_TENANT:-service}
-NETWORK_GATEWAY=${NETWORK_GATEWAY:-10.0.0.1}
+NETWORK_GATEWAY=${NETWORK_GATEWAY:-$BRIDGE_IP}
 NETWORK_INTERFACE=${NETWORK_INTERFACE:-eth0}
 NETWORK_SUBNET=${NETWORK_SUBNET:-10.0.0.0/24}
 KEYSTONE_AUTH_HOST=${KEYSTONE_AUTH_HOST:-$SERVICE_HOST}
 KEYSTONE_AUTH_PROTOCOL=${KEYSTONE_AUTH_PROTOCOL:-$SERVICE_PROTOCOL}
 KEYSTONE_AUTH_PORT=${KEYSTONE_AUTH_PORT:-35357}
+GLANCE_HOSTPORT=${GLANCE_HOSTPORT:-$SERVICE_HOST:9292}
 TROVE_AUTH_ENDPOINT=$KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:$KEYSTONE_AUTH_PORT/v2.0
 
 # PATH_TROVE more than likely has file separators, which sed does not like
@@ -148,7 +151,7 @@ function install_prep_packages() {
     exclaim 'Updating dependencies (part 1a)...'
     pkg_update
     exclaim 'Installing dependencies (part 1b)...'
-    pkg_install git-core kvm-ipxe python-pip
+    pkg_install git-core kvm-ipxe python-pip gettext
     sudo pip install --upgrade pip
 }
 
@@ -169,7 +172,8 @@ function install_devstack_code() {
     fi
     # Clones all of the code to where devstack expects it to be
     pushd $PATH_DEVSTACK_OUTPUT
-    cmd_clone_projects
+    cmd_clone_projects do_not_force_update $REDSTACK_SCRIPTS/projects-list \
+        $REDSTACK_SCRIPTS/image-projects-list
     popd
 }
 
@@ -235,7 +239,7 @@ function run_devstack() {
         eval echo "\"$(cat $REDSTACK_SCRIPTS/vagrant.rc)\"" >> localrc
     fi
 
-    export MYSQL_HOST=localhost
+    export MYSQL_HOST=$SERVICE_HOST
     ./stack.sh
     popd
 }
@@ -296,14 +300,21 @@ function cmd_set_datastore() {
         VERSION="2.8"
     elif [ "$DATASTORE_TYPE" == "cassandra" ]; then
         PACKAGES=${PACKAGES:-"cassandra"}
-        VERSION="2.0.5"
+        VERSION="2.0.6"
     elif [ "$DATASTORE_TYPE" == "couchbase" ]; then
         PACKAGES=${PACKAGES:-"couchbase-server"}
         VERSION="2.2.0"
+    elif [ "$DATASTORE_TYPE" == "postgresql" ]; then
+        PACKAGES=${PACKAGES:-"postgresql-9.1"}
+        VERSION="9.1"
     else
         echo "Unrecognized datastore type. ($DATASTORE_TYPE)"
         exit 1
     fi
+
+    sed -i "s/%datastore_type%/$DATASTORE_TYPE/g" $TROVE_CONF_DIR/test.conf
+    sed -i "s/%datastore_version%/$VERSION/g" $TROVE_CONF_DIR/test.conf
+
     #rd_manage datastore_version_update <datastore_name> <version_name> <datastore_manager> <image_id> <packages> <active>
     rd_manage datastore_version_update "$DATASTORE_TYPE" "$VERSION" "$DATASTORE_TYPE" $IMAGEID "$PACKAGES" 1
     rd_manage datastore_version_update "$DATASTORE_TYPE" "inactive_version" "manager1" $IMAGEID "" 0
@@ -314,33 +325,6 @@ function cmd_set_datastore() {
     sleep 1.5
     cmd_start
 }
-
-function upload_image_to_glance() {
-    exclaim "Uploading the image to glance."
-
-    IMAGE_NAME=$1
-    CONTAINER_FORMAT=$2
-    DISK_FORMAT=$3
-    TROVE_TENANT=$4
-    IMAGE_LOC=$5
-    # Unused since support of multiple datastores added.
-    # Still need for another datastores in future
-    DATASTORE_TYPE=$6
-    GLANCE_IMAGEID=`get_glance_id cmd_glance_client image-create \
-        --name="$IMAGE_NAME" --is-public=True \
-        --container-format=$CONTAINER_FORMAT --disk-format=$DISK_FORMAT \
-        --owner=$TROVE_TENANT < $IMAGE_LOC`
-
-    echo "IMAGE ID: $GLANCE_IMAGEID"
-    if [ -z "$GLANCE_IMAGEID" ];
-    then
-        echo "Glance upload failed!"
-        exit 1
-    fi
-
-    cmd_set_datastore $GLANCE_IMAGEID $DATASTORE_TYPE
-}
-
 
 ###############################################################################
 # Run Unit Tests
@@ -360,6 +344,12 @@ function cmd_start_deps() {
         exclaim "Reconnecting Volume Group to Backing File"
         sudo losetup -f --show ${VOLUME_BACKING_FILE}
     fi
+
+    if ! egrep -q ${SWIFT_DATA_DIR}/drives/sdb1 /proc/mounts; then
+        exclaim "Re-mounting Swift Disk Image"
+        sudo mount -t xfs -o loop,noatime,nodiratime,nobarrier,logbufs=8  ${SWIFT_DISK_IMAGE} ${SWIFT_DATA_DIR}/drives/sdb1
+    fi
+
     if [[ -e $PATH_DEVSTACK_SRC/stack-screenrc ]]; then
         screen -dmS stack -c $PATH_DEVSTACK_SRC/stack-screenrc
     fi
@@ -383,17 +373,17 @@ function rd_manage() {
 }
 
 function install_test_packages() {
-    sudo pip install openstack.nose_plugin proboscis pexpect mockito
+    sudo pip install openstack.nose_plugin proboscis pexpect
 }
 
-function mod_test_conf() {
-    cp $REDSTACK_SCRIPTS/conf/test_begin.conf $TROVE_CONF_DIR/test.conf
+function mod_confs() {
+    sudo install -b --mode 0664 $REDSTACK_SCRIPTS/conf/test_begin.conf $TROVE_CONF_DIR/test.conf
     TROVE_REPORT_DIR=$REDSTACK_SCRIPTS/../report/
     EXTRA_CONF=$REDSTACK_SCRIPTS/conf/test.extra.conf
     if [ -e $EXTRA_CONF ]; then
         cat $EXTRA_CONF >> $TROVE_CONF_DIR/test.conf
     fi
-    cat $REDSTACK_SCRIPTS/conf/test_end.conf >> $TROVE_CONF_DIR/test.conf
+    cat $REDSTACK_SCRIPTS/conf/test_end.conf | sudo tee -a $TROVE_CONF_DIR/test.conf > /dev/null
 
     #Add the paths to the test conf
     sed -i "s,%report_directory%,$TROVE_REPORT_DIR,g" $TROVE_CONF_DIR/test.conf
@@ -409,15 +399,41 @@ function mod_test_conf() {
     sed -i "s/%alt_demo_tenant_id%/$(get_attribute_id tenant alt_demo 1)/g" $TROVE_CONF_DIR/test.conf
     sed -i "s/%demo_tenant_id%/$(get_attribute_id tenant demo 1)/g" $TROVE_CONF_DIR/test.conf
     sed -i "s/%admin_password%/$ADMIN_PASSWORD/g" $TROVE_CONF_DIR/test.conf
+
+    # Enable neutron tests if needed
+    sed -i "s/%neutron_enabled%/$ENABLE_NEUTRON/g" $TROVE_CONF_DIR/test.conf
+
+    # If neutron is enabled, we create a shared network and write this info to the
+    # confs so that the integration tests can use it.
+    if [[ $ENABLE_NEUTRON = true ]]; then
+        # customer_network_id=$(neutron net-list | awk '/customer/ {print $2}')
+        # if [[ -z "$customer_network_id" ]]; then
+        #    customer_network_id=$(neutron net-create customer | awk '/ id / {print $4}')
+        #    customer_subnet_id=$(neutron subnet-create customer 10.0.1.0/24 --no-gateway | awk '/ id / {print $4}')
+        # fi
+        management_network_id=$(neutron net-list | awk '/private/ {print $2}')
+        management_subnet=$(neutron net-list | awk '/private/ {print $7}')
+        sed -i "s,%shared_network%,$management_network_id,g" $TROVE_CONF_DIR/test.conf
+        sed -i "s,%shared_network_subnet%,$management_subnet,g" $TROVE_CONF_DIR/test.conf
+        # sed -i "s,%private_network%,$customer_network_id,g" $TROVE_CONF_DIR/test.conf
+        # sed -i "s,%private_network_subnet%,10.0.1.0/24,g" $TROVE_CONF_DIR/test.conf
+        iniset $TROVE_CONF_DIR/trove.conf DEFAULT network_label_regex .*
+        iniset $TROVE_CONF_DIR/trove.conf DEFAULT ip_regex .*
+        iniset $TROVE_CONF_DIR/trove.conf DEFAULT black_list_regex ^10.0.1.*
+        iniset $TROVE_CONF_DIR/trove.conf DEFAULT default_neutron_networks $management_network_id
+        iniset $TROVE_CONF_DIR/trove.conf DEFAULT network_driver trove.network.neutron.NeutronDriver
+        iniset $TROVE_CONF_DIR/trove-taskmanager.conf DEFAULT network_driver trove.network.neutron.NeutronDriver
+        iniset $TROVE_CONF_DIR/trove-taskmanager.conf mysql tcp_ports 22,3306
+    fi
 }
 
 
 function add_test_flavors() {
     add_flavor 'tinier' 6 506 10 1 0
-    add_flavor 'm1.rd-tiny' 7 512 2 1 0
-    add_flavor 'm1.rd-smaller' 8 768 2 1 0
-    add_flavor 'eph.rd-tiny' 9 512 2 1 1
-    add_flavor 'eph.rd-smaller' 10 768 2 1 2
+    add_flavor 'm1.rd-tiny' 7 512 3 1 0
+    add_flavor 'm1.rd-smaller' 8 768 3 1 0
+    add_flavor 'eph.rd-tiny' 9 512 3 1 1
+    add_flavor 'eph.rd-smaller' 10 768 3 1 2
 }
 
 function cmd_test_init() {
@@ -426,20 +442,65 @@ function cmd_test_init() {
     exclaim "Installing python test packages."
     install_test_packages
 
-    exclaim "Modifying test.conf with appropriate values."
-    mod_test_conf
+    exclaim "Modifying test.conf and guest.conf with appropriate values."
+    mod_confs
 
     exclaim "Creating Test Flavors."
     add_test_flavors
 
-    exclaim "Configuring IPTables for PostRouting $NETWORK_SUBNET through $NETWORK_INTERFACE."
-    sudo iptables -t nat -A POSTROUTING -s $NETWORK_SUBNET -o $NETWORK_INTERFACE -j MASQUERADE
+    if [[ -n $KEY_DIR ]]; then
+        exclaim "Installing the SSH key from $KEY_DIR to the test environment."
+        mkdir -p $USERHOME/.ssh
+        install -b --mode 0400 $KEY_DIR/id_rsa $USERHOME/.ssh
+        cat $KEY_DIR/authorized_keys >> $USERHOME/.ssh/authorized_keys
+    fi
 }
+
+function cmd_build_image() {
+    IMAGE_DATASTORE_TYPE=${1:-'mysql'}
+    ESCAPED_PATH_TROVE=${2:-'\/opt\/stack\/trove'}
+    HOST_SCP_USERNAME=${3:-'ubuntu'}
+    GUEST_USERNAME=${4:-'ubuntu'}
+
+    exclaim "Ensuring we have all packages needed to build image."
+    sudo apt-get -y update
+    sudo apt-get -y install qemu
+    cmd_clone_projects do_not_force_update $REDSTACK_SCRIPTS/image-projects-list
+
+    exclaim "Use tripleo-diskimagebuilder to actually build the Trove Guest Agent Image."
+    build_guest_image $IMAGE_DATASTORE_TYPE
+}
+
+function cmd_build_and_upload_image() {
+    local IMAGE_URL=""
+    # Use /tmp as file_cache
+    FILES=/tmp
+    if [[ -n $IMAGE_DOWNLOAD_URL ]]; then
+        exclaim "Downloading and using cached image"
+        IMAGE_URL=$IMAGE_DOWNLOAD_URL
+    else
+        exclaim "Trying to build image"
+        build_guest_image $1
+        QCOW_IMAGE=`find $VM_PATH -name '*.qcow2'`
+        IMAGE_URL="file://$QCOW_IMAGE"
+    fi
+
+    source $PATH_DEVSTACK_SRC/openrc admin admin
+    TOKEN=$(keystone token-get | grep ' id ' | get_field 2)
+    GLANCE_IMAGEID=`get_glance_id upload_image $IMAGE_URL $TOKEN`
+    source $PATH_DEVSTACK_SRC/openrc demo demo
+    [[ -z "$GLANCE_IMAGEID" ]] && echo "Glance upload failed!" && exit 1
+    echo "IMAGE ID: $GLANCE_IMAGEID"
+
+    exclaim "Updating Datastores"
+    cmd_set_datastore $GLANCE_IMAGEID $1
+}
+
 
 function cmd_initialize() {
     exclaim '(Re)Initializing Trove...'
     pushd $PATH_DEVSTACK_SRC
-    export MYSQL_HOST=localhost
+    export MYSQL_HOST=$SERVICE_HOST
     ./unstack.sh
     ./stack.sh
     popd
@@ -450,7 +511,7 @@ function cmd_initialize() {
 # Start Trove specific daemons interactively in a screen session
 ###############################################################################
 
-function screen_it {
+function tr_screen_it {
     echo "Starting $@..."
     screen -S stack -X screen -t $1 bash
     screen -S stack -p $1 -X stuff "$2"$'\015'
@@ -488,15 +549,15 @@ function init_fake_mode() {
 }
 
 function cmd_start() {
-    screen_it tr-api "cd $PATH_TROVE; $TROVE_BIN_DIR/trove-api --config-file=$TROVE_CONF_DIR/trove.conf --debug 2>&1 | tee $TROVE_LOGDIR/trove-api.log"
-    screen_it tr-tmgr "cd $PATH_TROVE; $TROVE_BIN_DIR/trove-taskmanager --config-file=$TROVE_CONF_DIR/trove-taskmanager.conf --debug 2>&1 | tee $TROVE_LOGDIR/trove-taskmanager.log"
-    screen_it tr-cond "cd $PATH_TROVE; $TROVE_BIN_DIR/trove-conductor --config-file=$TROVE_CONF_DIR/trove-conductor.conf --debug 2>&1 | tee $TROVE_LOGDIR/trove-conductor.log"
+    tr_screen_it tr-api "cd $PATH_TROVE; $TROVE_BIN_DIR/trove-api --config-file=$TROVE_CONF_DIR/trove.conf --debug 2>&1 | tee $TROVE_LOGDIR/trove-api.log"
+    tr_screen_it tr-tmgr "cd $PATH_TROVE; $TROVE_BIN_DIR/trove-taskmanager --config-file=$TROVE_CONF_DIR/trove-taskmanager.conf --debug 2>&1 | tee $TROVE_LOGDIR/trove-taskmanager.log"
+    tr_screen_it tr-cond "cd $PATH_TROVE; $TROVE_BIN_DIR/trove-conductor --config-file=$TROVE_CONF_DIR/trove-conductor.conf --debug 2>&1 | tee $TROVE_LOGDIR/trove-conductor.log"
 }
 
 function cmd_start_fake() {
     init_fake_mode
     CONF_FILE=/tmp/trove.conf.test
-    screen_it tr-fake "cd $PATH_TROVE; $TROVE_BIN_DIR/trove-fake-mode --config-file=$CONF_FILE $@"
+    tr_screen_it tr-fake "cd $PATH_TROVE; $TROVE_BIN_DIR/trove-fake-mode --config-file=$CONF_FILE $@"
 }
 
 function cmd_run() {
@@ -582,8 +643,8 @@ function cmd_example_tests() {
     echo "
 {
     \"directory\": \"$REDSTACK_TESTS/../apidocs/src/resources/samples/\",
-    \"auth_url\":\"http://localhost:35357/v2.0/tokens\",
-    \"api_url\":\"http://localhost:8779\",
+    \"auth_url\":\"http://$KEYSTONE_AUTH_HOST:35357/v2.0/tokens\",
+    \"api_url\":\"http://$SERVICE_HOST:8779\",
     \"replace_host\":\"https://ord.databases.api.rackspacecloud.com\",
     \"replace_dns_hostname\": \"e09ad9a3f73309469cf1f43d11e79549caf9acf2.rackspaceclouddb.com\",
     \"username\":\"examples\",
@@ -611,52 +672,6 @@ function mysql_nova() {
 function mysql_trove() {
     echo mysql trove --execute "$@"
     mysql -u root -p$MYSQL_PASSWORD trove --execute "$@"
-}
-
-function cmd_nova_client() {
-    # This serves as an example of how to call the Nova client script.
-    TESTVOLUME=`echo "$@" | awk '/volume/{print $1}'`
-    if [ -z "$TESTVOLUME" -o "$TESTVOLUME" = "volume-attach" -o "$TESTVOLUME" = "volume-detach" ]; then
-        nova --os-auth-url=http://localhost:35357/v2.0 \
-            --os-tenant-name=trove --os-username=radmin --os-password=radmin \
-            --os-region-name=RegionOne \
-            --service-type=compute --service-name='nova' $@
-    else
-        nova --os_auth_url=http://localhost:35357/v2.0 \
-            --os-tenant-name=trove --os-username=radmin --os-password=radmin \
-            --os-region-name=RegionOne \
-            --service-type=volume --service-name='cinder' $@
-    fi
-}
-
-function cmd_swift_client() {
-    source $PATH_DEVSTACK_SRC/openrc admin admin
-    swift $@
-}
-
-function cmd_glance_client() {
-    source $PATH_DEVSTACK_SRC/openrc admin admin
-    glance $@
-}
-
-function cmd_rd_client() {
-    source $PATH_DEVSTACK_SRC/openrc
-    trove $@
-}
-
-function cmd_rd_mgmt_client() {
-    # This serves as an example of how to call the Trove management client script.
-    trove-cli --username=radmin --apikey=radmin --tenant=trove \
-        --auth_url=http://localhost:35357/v2.0/tokens auth login
-    trove-mgmt-cli $@
-}
-
-function cmd_delete_nova_instance() {
-    # Nova will not let you delete an instance whose state is error, but we
-    # won't let that stop us.
-    echo "Deleting instance $1..."
-    mysql_nova "UPDATE instances SET vm_state='active' WHERE vm_state='error' AND uuid='$1';"
-    cmd_nova_client delete $1
 }
 
 function cmd_wipe_logs() {
@@ -697,7 +712,7 @@ function cmd_run_ci() {
     cmd_install
     cmd_test_init
     # The arg will be the image type
-    cmd_build_image $1
+    cmd_build_and_upload_image $1
 
     # Test in fake mode.
     exclaim "Testing in fake mode."
@@ -729,12 +744,7 @@ function cmd_clear() {
 
 function cmd_kick_start() {
     cmd_test_init
-    cmd_build_image $1
-}
-
-function cmd_post_devstack() {
-    cmd_test_init
-    cmd_build_image $1
+    cmd_build_and_upload_image $1
 }
 
 function cmd_reset_task() {
@@ -743,12 +753,13 @@ function cmd_reset_task() {
 
 function cmd_clone_projects() {
     UPDATE_PROJECTS=$1
-    for project in $(cat $REDSTACK_SCRIPTS/projects-list); do
+    PROJECT_LIST_FILES=${@:2}
+    for project in $(cat $PROJECT_LIST_FILES); do
         if [ ! -d $PATH_DEVSTACK_OUTPUT/$project ]; then
             echo "Creating a new clone of $project..."
             git_clone $OPENSTACK_GITSOURCE/"$project".git ${PATH_DEVSTACK_OUTPUT}/$project master
         else
-            if [ -z $UPDATE_PROJECTS ]; then
+            if [ $UPDATE_PROJECTS != "force_update" ]; then
                 echo "$project was already cloned or exists in a shared folder. Ignoring..."
             else
                 echo "$project was already cloned. Pulling changes to update."
@@ -787,14 +798,13 @@ function print_usage() {
         --setup environment--
           install         - Install all the required dependencies and bring up tr-api and tr-tmgr
           test-init       - Configure the test configuration files and add keystone test users
-          build-image     - Builds the vm image and adds it to glance
+          build-image     - Builds the vm image for the trove guest
           initialize      - Reinitialize the trove database, users, services, and test config
-          post-devstack   - Configures testing environment, builds image and uploads to glance
 
         --helper for environment--
           kick-start      - kick start the setup of trove.
                             (redstack test-init/build-image in one step)
-                            [mysql no-clean] no clean avoids rebuilding pacakges from scratch
+                            [mysql no-clean] no clean avoids rebuilding packages from scratch
 
         --trove dependency services--
           start-deps      - Start or resume daemons Trove depends on.
@@ -811,14 +821,7 @@ function print_usage() {
 
         --tools--
           debug           - Debug this script (shows all commands).
-          glance-client   - Runs glance client with admin user.
-          nova-client     - Runs Nova client with admin user.
-          swift-client    - Runs Swift client with admin user.
-          rd-client       - Runs Trove client with admin user.
-          rd-mgmt-client  - Runs Trove management client with admin user.
-                            * Shows a valid token.
           wipe-logs       - Resets all log files.
-          nova-delete     - Deletes a nova instance.
           rd-sql          - Opens the Trove MySQL database.
           vagrant-ssh     - Runs a command from the host on the server.
           clear           - Destroy instances and rabbit queues.
@@ -842,7 +845,6 @@ function run_command() {
         "test-init" ) cmd_test_init;;
         "build-image" ) shift; cmd_build_image $@;;
         "initialize" ) cmd_initialize;;
-        "post-devstack" ) shift; cmd_post_devstack $@;;
         "unit-tests" ) cmd_unit_tests;;
         "start-deps" ) cmd_start_deps;;
         "stop-deps" ) cmd_stop_deps;;
@@ -851,12 +853,6 @@ function run_command() {
         "int-tests-wb" ) shift; cmd_int_tests_white_box $@;;
         "simple-tests") shift; cmd_int_tests_simple $@;;
         "stop" ) cmd_stop;;
-        "glance-client" ) shift; cmd_glance_client $@;;
-        "nova-client" ) shift; cmd_nova_client $@;;
-        "rd-client" ) shift; cmd_rd_client $@;;
-        "rd-mgmt-client" ) shift; cmd_rd_mgmt_client $@;;
-        "swift-client" ) shift; cmd_swift_client $@;;
-        "nova-delete" ) shift; cmd_delete_nova_instance $@;;
         "wipe-logs" ) cmd_wipe_logs;;
         "rd-sql" ) shift; cmd_rd_sql $@;;
         "fake-sql" ) shift; cmd_fake_sql $@;;
@@ -869,7 +865,9 @@ function run_command() {
         "kick-start" ) shift; cmd_kick_start $@;;
         "run-fake" ) shift; cmd_run_fake $@;;
         "start-fake" ) shift; cmd_start_fake $@;;
-        "update-projects" ) cmd_clone_projects force_update;;
+        "update-projects" ) cmd_clone_projects force_update \
+                            $REDSTACK_SCRIPTS/projects-list \
+                            $REDSTACK_SCRIPTS/image-projects-list;;
         "reset-task" ) shift; cmd_reset_task $@;;
         "wipe-queues" ) shift; cmd_wipe_queues $@;;
         "example-tests" ) shift; cmd_example_tests $@;;
