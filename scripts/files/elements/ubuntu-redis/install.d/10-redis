@@ -17,7 +17,7 @@ Package: *
 Pin: release n=trusty
 Pin-Priority: -10
 
-Package: redis-server redis-tools
+Package: redis-server redis-tools libjemalloc1
 Pin: release n=trusty
 Pin-Priority: 501
 EOF
