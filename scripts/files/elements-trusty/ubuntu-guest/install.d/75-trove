@@ -1,0 +1,17 @@
+[ -n "${DBAAS_RELEASE}" ] || die "DBAAS_RELEASE not set"
+[ -n "${DBAAS_REPO}" ] || die "DBAAS_REPO not set"
+[ -n "${DBAAS_VERSION}" ] || die "DBAAS_VERSION not set"
+
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x7A54FC1AE61BB490
+
+# add Tesora to apt sources
+cat << EOF > /etc/apt/sources.list.d/tesora.list
+deb http://tesora-repos.tesora.com/repos/apt/ubuntu ${DBAAS_RELEASE}-${DBAAS_VERSION} ${DBAAS_REPO}
+EOF
+
+# temporary
+add-apt-repository -y ppa:ubuntu-cloud-archive/juno-staging
+
+# update and install
+apt-get update
+apt-get install -y tesora-dbaas-guestagent
