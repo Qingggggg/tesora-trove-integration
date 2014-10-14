@@ -16,7 +16,7 @@ yum -y install yum-utils
 yum-config-manager --disable mysql56-community
 yum-config-manager --enable mysql55-community
 
-yum install mysql-community-server percona-xtrabackup
+yum -y install mysql-community-server percona-xtrabackup
 
 mkdir /etc/mysql
 mkdir /etc/mysql/conf.d/
