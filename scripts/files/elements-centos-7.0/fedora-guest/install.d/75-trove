@@ -2,7 +2,8 @@
 [ -n "${DBAAS_REPO}" ] || die "DBAAS_REPO not set"
 [ -n "${DBAAS_VERSION}" ] || die "DBAAS_VERSION not set"
 
-yum install -y http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+yum -y install http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-2.noarch.rpm
+yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno-1.noarch.rpm
 
 if [ "$DBAAS_REPO" == "main" ]; then
     yum install -y http://tesora-dbaas.tesora.com/tesora-release/tesora-dbaas-${DBAAS_RELEASE}-${DBAAS_VERSION}-0.x86_64.rpm
