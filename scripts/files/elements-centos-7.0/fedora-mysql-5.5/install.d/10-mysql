@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# CONTEXT: GUEST during CONSTRUCTION as ROOT
+# PURPOSE: Install controller base required packages
+
+set -e
+set -o xtrace
+
+yum -y install mysql mysql-server percona-xtrabackup
+mkdir /etc/mysql
+mkdir /etc/mysql/conf.d/
+
+add-rule INPUT -m state --state NEW -m tcp -p tcp --dport 3306 -j ACCEPT
