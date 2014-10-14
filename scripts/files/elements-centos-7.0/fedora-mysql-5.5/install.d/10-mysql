@@ -6,8 +6,19 @@
 set -e
 set -o xtrace
 
-yum -y install mysql mysql-server percona-xtrabackup
+# Instal the mysql community repository
+yum -y install http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
+
+# Add yum utils to give us yum-config-manager
+yum -y install yum-utils
+
+# Setup the version of mysql we want
+yum-config-manager --disable mysql56-community
+yum-config-manager --enable mysql55-community
+
+yum install mysql-community-server percona-xtrabackup
+
 mkdir /etc/mysql
 mkdir /etc/mysql/conf.d/
 
-add-rule INPUT -m state --state NEW -m tcp -p tcp --dport 3306 -j ACCEPT
+systemctl enable $service_name.service
