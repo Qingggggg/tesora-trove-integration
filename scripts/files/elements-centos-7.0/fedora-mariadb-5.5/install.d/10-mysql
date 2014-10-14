@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# CONTEXT: GUEST during CONSTRUCTION as ROOT
+# PURPOSE: Install controller base required packages
+
+set -e
+set -o xtrace
+
+sudo yum install MariaDB-server MariaDB-client percona-xtrabackup
