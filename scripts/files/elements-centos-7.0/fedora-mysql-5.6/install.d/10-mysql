@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# CONTEXT: GUEST during CONSTRUCTION as ROOT
+# PURPOSE: Install controller base required packages
+
+set -e
+set -o xtrace
+
+# Instal the mysql community repository
+yum -y install http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
+
+# Add yum utils to give us yum-config-manager
+yum -y install yum-utils
+
+# Setup the version of mysql we want
+# yum-config-manager --disable mysql56-community
+# yum-config-manager --enable mysql55-community
+# 5.6 is the default so do nothing
+
+yum -y install mysql-community-server percona-xtrabackup
+
+mkdir /etc/mysql
+mkdir /etc/mysql/conf.d/
+
+cat >/etc/mysql/conf.d/no_perf_schema.cnf <<_EOF_
+[mysqld]
+performance_schema = off
+_EOF_
+
+systemctl enable mysqld
