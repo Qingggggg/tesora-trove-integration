@@ -6,4 +6,4 @@
 set -e
 set -o xtrace
 
-sudo yum install MariaDB-server MariaDB-client percona-xtrabackup
+yum -y install MariaDB-server MariaDB-client percona-xtrabackup
