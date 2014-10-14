@@ -21,4 +21,4 @@ yum -y install mysql-community-server percona-xtrabackup
 mkdir /etc/mysql
 mkdir /etc/mysql/conf.d/
 
-systemctl enable $service_name.service
+systemctl enable mysqld
