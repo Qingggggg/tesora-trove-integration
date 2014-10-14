@@ -10,6 +10,6 @@ set -o xtrace
 
 apt-get -y install software-properties-common
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
-add-apt-repository 'deb http://mirrors.syringanetworks.net/mariadb/repo/5.5/ubuntu $RELEASE main'
+add-apt-repository 'deb http://nyc2.mirrors.digitalocean.com/mariadb/repo/5.5/ubuntu trusty main'
 
 apt-get update
