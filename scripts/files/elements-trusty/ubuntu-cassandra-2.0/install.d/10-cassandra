@@ -18,7 +18,7 @@ apt-get install -y python-migrate build-essential
 
 apt-get install -y dsc20 cassandra=2.0.10 -V 
 
-echo "cassandra hold" | sudo dpkg --set-selections
+echo "cassandra hold" | dpkg --set-selections
 
 service cassandra stop
 
