@@ -22,9 +22,4 @@ yum -y install mysql-community-server percona-xtrabackup
 mkdir /etc/mysql
 mkdir /etc/mysql/conf.d/
 
-cat >/etc/mysql/conf.d/no_perf_schema.cnf <<_EOF_
-[mysqld]
-performance_schema = off
-_EOF_
-
 systemctl enable mysqld
