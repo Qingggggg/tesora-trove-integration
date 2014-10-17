@@ -2,6 +2,8 @@
 [ -n "${DBAAS_REPO}" ] || die "DBAAS_REPO not set"
 [ -n "${DBAAS_VERSION}" ] || die "DBAAS_VERSION not set"
 
+export DEBIAN_FRONTEND=noninteractive
+
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x7A54FC1AE61BB490
 
 # add Tesora to apt sources
