@@ -14,4 +14,4 @@ gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOL
 
-yum clean metadata
+yum clean expire-cache
