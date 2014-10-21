@@ -7,3 +7,8 @@ set -e
 set -o xtrace
 
 yum -y install Percona-Server-shared-55 Percona-Server-server-55 Percona-Server-client-55 percona-xtrabackup
+
+mkdir /etc/mysql
+mkdir /etc/mysql/conf.d/
+
+systemctl enable mysqld
