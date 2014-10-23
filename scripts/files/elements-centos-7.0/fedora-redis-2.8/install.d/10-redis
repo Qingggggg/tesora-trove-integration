@@ -5,5 +5,7 @@
 
 set -ex
 
+mkdir /etc/redis
+
 yum -y install redis
 service redis start
