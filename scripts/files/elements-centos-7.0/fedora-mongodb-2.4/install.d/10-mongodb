@@ -18,4 +18,6 @@ yum -y install mongo-10gen-2.4.9 mongo-10gen-server-2.4.9 --exclude mongodb-org,
 
 echo "exclude=mongodb-org,mongodb-org-server,mongodb-org-shell,mongodb-org-mongos,mongodb-org-tools,mongo-10gen,mongo-10gen-server" >> /etc/yum.conf
 
+echo "smallfiles = true" >> /etc/mongod.conf
+
 chkconfig mongod on
