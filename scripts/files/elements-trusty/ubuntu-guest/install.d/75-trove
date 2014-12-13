@@ -12,7 +12,7 @@ deb http://tesora-repos.tesora.com/repos/apt/ubuntu ${DBAAS_RELEASE}-${DBAAS_VER
 EOF
 
 # temporary
-add-apt-repository -y ppa:ubuntu-cloud-archive/juno-staging
+add-apt-repository -y cloud-archive:juno
 
 # update and install
 apt-get update
