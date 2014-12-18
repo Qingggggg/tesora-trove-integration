@@ -3,4 +3,9 @@
 set -e
 set -o xtrace
 
-yum -y install postgresql91
+yum install -y http://yum.postgresql.org/9.3/redhat/rhel-7-x86_64/pgdg-centos93-9.3-1.noarch.rpm
+
+yum install -y postgresql93-server postgresql93-contrib
+/usr/pgsql-9.3/bin/postgresql93-setup initdb
+systemctl enable postgresql-9.3.service
+systemctl start postgresql-9.3.service
