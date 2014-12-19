@@ -2,7 +2,7 @@
 [ -n "${DBAAS_REPO}" ] || die "DBAAS_REPO not set"
 [ -n "${DBAAS_VERSION}" ] || die "DBAAS_VERSION not set"
 
-yum -y install http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-2.noarch.rpm
+yum -y install http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
 yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno-1.noarch.rpm
 
 if [ "$DBAAS_REPO" == "main" ]; then
