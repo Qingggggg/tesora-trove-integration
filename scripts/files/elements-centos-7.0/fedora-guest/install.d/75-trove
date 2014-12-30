@@ -11,6 +11,7 @@ else
     yum install -y http://tesora-dbaas.tesora.com/tesora-release/tesora-dbaas-${DBAAS_RELEASE}-${DBAAS_REPO}-${DBAAS_VERSION}-0.x86_64.rpm
 fi
 
+yum install -y openssl-devel
 yum install -y tesora-dbaas-guestagent
 
 chkconfig openstack-trove-guestagent on
