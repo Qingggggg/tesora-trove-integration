@@ -6,9 +6,11 @@
 set -e
 set -o xtrace
 
+mkdir /var/lib/mysql
+
 yum -y install MariaDB-server MariaDB-client percona-xtrabackup
 
 mkdir /etc/mysql
 mkdir /etc/mysql/conf.d/
 
-systemctl enable mysqld
+chkconfig mysql on
