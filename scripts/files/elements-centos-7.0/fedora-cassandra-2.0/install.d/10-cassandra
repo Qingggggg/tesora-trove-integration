@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -ex
+set -o xtrace
+
+export DEBIAN_FRONTEND=noninteractive
+
+yum -y install java
+
+yum -y install dsc20
+
+systemctl start cassandra 
+chkconfig cassandra on
