@@ -1,0 +1,9 @@
+set -e
+set -o xtrace
+
+yum install -y curl
+
+curl -O http://packages.couchbase.com/releases/2.2.0/couchbase-server-community_2.2.0_x86_64.rpm
+
+rpm --install couchbase-server-community_2.2.0_x86_64.rpm
+
