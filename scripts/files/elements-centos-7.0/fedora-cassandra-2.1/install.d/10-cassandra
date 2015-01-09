@@ -7,7 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 yum -y install java
 
-yum -y install dsc20
+yum -y install dsc21
 
 systemctl start cassandra 
 chkconfig cassandra on

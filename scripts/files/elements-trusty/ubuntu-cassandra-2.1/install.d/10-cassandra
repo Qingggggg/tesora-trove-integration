@@ -16,7 +16,7 @@ apt-get install -y libxml2-dev ntp mc
 apt-get install -y libxslt1-dev python-pexpect
 apt-get install -y python-migrate build-essential
 
-apt-get install -y dsc20=2.0.11-1 cassandra=2.0.11
+apt-get install -y dsc20=2.1.2-1 cassandra=2.1.2
 
 echo "cassandra hold" | dpkg --set-selections
 
