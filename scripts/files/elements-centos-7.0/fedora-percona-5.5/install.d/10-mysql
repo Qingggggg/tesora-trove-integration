@@ -11,4 +11,9 @@ yum -y install Percona-Server-shared-55 Percona-Server-server-55 Percona-Server-
 mkdir /etc/mysql
 mkdir /etc/mysql/conf.d/
 
+if [ -f /etc/my.cnf ]; then
+    echo "!includedir /etc/mysql/conf.d/" >> /etc/my.cnf
+    mv /etc/my.cnf /etc/mysql/my.cnf
+fi
+
 systemctl enable mysqld
