@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+set -o xtrace
+
+source $_LIB/die
+
+[ -n "$TMP_HOOKS_PATH." ] || die "Temp hook path not set"
+
+if [ -e files/oracle ]; then
+   cp files/oracle/oracle-instantclient12.1-*.deb ${TMP_HOOKS_PATH}/.
+else
+    die "oracle deb files not found"
+fi
