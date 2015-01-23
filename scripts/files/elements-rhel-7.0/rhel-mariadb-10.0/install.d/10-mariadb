@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# CONTEXT: GUEST during CONSTRUCTION as ROOT
+# PURPOSE: Install controller base required packages
+
+set -e
+set -o xtrace
+
+mkdir /var/lib/mysql
+
+yum -y install MariaDB-server MariaDB-client percona-xtrabackup
+
+mkdir /etc/mysql
+mkdir /etc/mysql/conf.d/
+
+if [ -f /etc/my.cnf ]; then
+    echo "!includedir /etc/mysql/conf.d/" >> /etc/my.cnf
+    mv /etc/my.cnf /etc/mysql/my.cnf
+fi
+
+chkconfig mysql on

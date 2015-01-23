@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+set -o xtrace
+
+yum install -y http://yum.postgresql.org/9.3/redhat/rhel-7-x86_64/pgdg-redhat93-9.3-1.noarch.rpm
+
+yum install -y postgresql93-server postgresql93-contrib
+/usr/pgsql-9.3/bin/postgresql93-setup initdb
+
+mv /lib/systemd/system/postgresql-9.3.service /lib/systemd/system/postgresql.service
+
+systemctl enable postgresql.service
+systemctl start postgresql.service
