@@ -5,9 +5,6 @@
 
 set -ex
 
-#mkdir /etc/redis
-#mkdir /etc/redis/conf.d
-
 yum -y install redis
 
 systemctl enable redis.service
