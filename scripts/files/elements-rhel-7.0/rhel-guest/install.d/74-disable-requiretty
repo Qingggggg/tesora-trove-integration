@@ -1,0 +1,10 @@
+#!/bin/bash
+# Set NOPASSWORD and !requiretty for trove user
+
+set -e
+set -o xtrace
+
+echo "trove ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/trove
+echo "Defaults:trove !requiretty" >> /etc/sudoers.d/trove
+chmod 0440 /etc/sudoers.d/trove
+visudo -c
