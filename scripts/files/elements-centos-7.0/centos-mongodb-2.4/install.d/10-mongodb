@@ -22,6 +22,7 @@ echo "smallfiles = true" >> /etc/mongod.conf
 
 # DBAAS-238 - workaround issues in the shipped /etc/init.d/mongod
 sed -i -e "s;^\(#\s*\)\?PIDFILE[ \t]*=.*;PIDFILE=\`awk -F=  '/^pidfilepath\\\s*=\\\s*/{gsub(/^[ \\t]+/, \"\", \$2)\; print \$2}' \"\$CONFIGFILE\"\`;" /etc/init.d/mongod
+sed -i -e "s/.*init.d\/functions.*/SYSTEMCTL_SKIP_REDIRECT=true\n&/" /etc/init.d/mongod
 echo "d /var/run/mongodb 0755 mongod mongod" > /lib/tmpfiles.d/mongodb.conf
 
 chkconfig mongod on
