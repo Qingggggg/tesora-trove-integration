@@ -10,12 +10,18 @@ mkdir /var/lib/mysql
 
 yum -y install MariaDB-server MariaDB-client percona-xtrabackup
 
-mkdir /etc/mysql
-mkdir /etc/mysql/conf.d/
+BASE_MY_CNF_FILE="/etc/my.cnf"
+MYSQL_CNF_DIR="/etc/mysql/"
+MYSQL_CONF_D="${MYSQL_CNF_DIR}conf.d/"
 
-if [ -f /etc/my.cnf ]; then
-    echo "!includedir /etc/mysql/conf.d/" >> /etc/my.cnf
-    mv /etc/my.cnf /etc/mysql/my.cnf
+mkdir -p "$MYSQL_CONF_D"
+
+if [ ! -d "$BASE_MY_CNF_FILE" ]; then
+    echo "!includedir $MYSQL_CNF_DIR" >> "$BASE_MY_CNF_FILE"
+    echo "!includedir $MYSQL_CONF_D" >> "$BASE_MY_CNF_FILE"
+    # Make sure we preserve the original config file
+    # for datastores that lookup only in '/etc'.
+    cp -p "$BASE_MY_CNF_FILE" "${MYSQL_CNF_DIR}my.cnf"
 fi
 
 chkconfig mysql on
