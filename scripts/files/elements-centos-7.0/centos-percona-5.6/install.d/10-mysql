@@ -10,16 +10,19 @@ yum -y install Percona-Server-shared-56 Percona-Server-server-56 Percona-Server-
 
 BASE_MY_CNF_FILE="/etc/my.cnf"
 MYSQL_CNF_DIR="/etc/mysql/"
+MYSQL_CNF_DIR_MY_CNF_FILE="${MYSQL_CNF_DIR}my.cnf"
 MYSQL_CONF_D="${MYSQL_CNF_DIR}conf.d/"
 
 mkdir -p "$MYSQL_CONF_D"
 
 if [ ! -d "$BASE_MY_CNF_FILE" ]; then
-    echo "!includedir $MYSQL_CNF_DIR" >> "$BASE_MY_CNF_FILE"
-    echo "!includedir $MYSQL_CONF_D" >> "$BASE_MY_CNF_FILE"
     # Make sure we preserve the original config file
     # for datastores that lookup only in '/etc'.
-    cp -p "$BASE_MY_CNF_FILE" "${MYSQL_CNF_DIR}my.cnf"
+    # Watch for infinite include recursions.
+    cp -p "$BASE_MY_CNF_FILE" "$MYSQL_CNF_DIR_MY_CNF_FILE"
+    echo "!includedir $MYSQL_CNF_DIR" >> "$BASE_MY_CNF_FILE"
+    echo "!includedir $MYSQL_CONF_D" >> "$BASE_MY_CNF_FILE"
+    echo "!includedir $MYSQL_CONF_D" >> "$MYSQL_CNF_DIR_MY_CNF_FILE"
 fi
 
 systemctl enable mysqld
