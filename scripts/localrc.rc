@@ -32,10 +32,10 @@ VOLUME_BACKING_FILE=${VOLUME_BACKING_FILE}
 EXTRA_OPTS=(lock_path=$USERHOME/nova_locks rescan_timeout=180 resizefs_timeout=240 force_dhcp_release=False)
 UNDO_REQUIREMENTS=False
 
-# LIBS_FROM_GIT=python-troveclient
+LIBS_FROM_GIT=python-troveclient
 
-# TROVE_REPO=https://github.com/Tesora/tesora-trove.git
-# TROVECLIENT_REPO=https://github.com/Tesora/tesora-python-troveclient.git
+TROVE_REPO=https://github.com/Tesora/tesora-trove.git
+TROVECLIENT_REPO=https://github.com/Tesora/tesora-python-troveclient.git
 
 disable_service heat h-api h-api-cfn h-api-cw h-eng
 PRECACHE_IMAGES=False
