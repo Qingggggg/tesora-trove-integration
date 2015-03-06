@@ -5,5 +5,4 @@ set -o xtrace
 # CONTEXT: HOST after IMAGE BUILD as SCRIPT USER
 # PURPOSE: Set the loopback network in host file
 
-host_name=`hostname`
-echo "127.0.0.1 ${host_name}" >> /etc/hosts
+echo "127.0.0.1 localhost" >> /etc/hosts
