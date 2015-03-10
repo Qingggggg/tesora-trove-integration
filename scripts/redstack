@@ -213,6 +213,18 @@ function fixup_broken_devstack() {
     :
 }
 
+function add_keypair() {
+    if [[ -z $(nova --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT keypair-list | grep mykey) ]]; then
+        exclaim "Adding mykey keypair to nova."
+        mkdir -p $USERHOME/.ssh
+        nova --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT keypair-add mykey > $USERHOME/.ssh/mykey
+        nova --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT keypair-show mykey | grep 'Public key:' | cut -d' ' -f3- > $USERHOME/.ssh/mykey.pub
+        chown -R $USER:$USER $USERHOME/.ssh
+        chmod 700 $USERHOME/.ssh && chmod 600 $USERHOME/.ssh/*
+        iniset $TROVE_CONF_DIR/trove-taskmanager.conf DEFAULT use_nova_key_name mykey
+    fi
+}
+
 function run_devstack() {
     exclaim "Running devstack..."
 
@@ -259,9 +271,16 @@ function cmd_install() {
     install_reviews_on_top_of_devstack
     fixup_broken_devstack
     run_devstack
+    cmd_add_keypair
     exclaim "FINISHED INSTALL"
 }
 
+function cmd_add_keypair() {
+    cmd_stop
+    add_keypair
+    sleep 3
+    cmd_start
+}
 
 ###############################################################################
 # Build the image
@@ -442,7 +461,6 @@ function mod_confs() {
         iniset $TROVE_CONF_DIR/trove-taskmanager.conf mysql tcp_ports 22,3306
     fi
 }
-
 
 function add_test_flavors() {
     add_flavor 'tinier' 6 506 10 1 0
@@ -920,6 +938,7 @@ function run_command() {
     case "$1" in
         "install" ) cmd_install;;
         "test-init" ) cmd_test_init;;
+        "add-keypair" ) cmd_add_keypair;;
         "build-image" ) shift; cmd_build_image $@;;
         "initialize" ) cmd_initialize;;
         "unit-tests" ) cmd_unit_tests;;
