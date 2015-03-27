@@ -286,15 +286,17 @@ function cmd_install() {
     install_reviews_on_top_of_devstack
     fixup_broken_devstack
     run_devstack
-    cmd_add_keypair
     exclaim "FINISHED INSTALL"
 }
 
 function cmd_add_keypair() {
+    sleep 3
     cmd_stop
+    sleep 3
     add_keypair
     sleep 3
     cmd_start
+    sleep 3
 }
 
 ###############################################################################
