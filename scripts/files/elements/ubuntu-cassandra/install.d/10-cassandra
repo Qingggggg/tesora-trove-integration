@@ -14,6 +14,12 @@ apt-get install -qy libxslt1-dev python-pexpect
 apt-get install -qy python-migrate build-essential
 
 apt-get install cassandra -qy
+
+# The Python Driver 2.0 for Apache Cassandra.
+pip install cassandra-driver
+# Sorted sets support for the Python driver.
+pip install blist
+
 service cassandra stop
 rm -rf /var/lib/cassandra/data/system/*
 service cassandra start
