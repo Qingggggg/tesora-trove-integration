@@ -12,6 +12,7 @@ else
 fi
 
 yum install -y openssl-devel
+yum install -y python-qpid
 yum install -y tesora-dbaas-guestagent
 
 chkconfig openstack-trove-guestagent on
