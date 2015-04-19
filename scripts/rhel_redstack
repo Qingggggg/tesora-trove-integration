@@ -7,8 +7,8 @@ set -e
 export DISTRO=rhel
 export GUEST_USERNAME=fedora
 
-# This is used as the 'package' during kick-start to 
-# prevent the guest failing on startup since it can't 
+# This is used as the 'package' during kick-start to
+# prevent the guest failing on startup since it can't
 # find the packages kick-start puts in by default
 export PACKAGES=curl
 
