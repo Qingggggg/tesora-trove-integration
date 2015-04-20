@@ -11,7 +11,7 @@ cat << EOF > /etc/apt/sources.list.d/tesora.list
 deb http://tesora-repos.tesora.com/repos/apt/ubuntu ${DBAAS_RELEASE}-${DBAAS_VERSION} ${DBAAS_REPO}
 EOF
 
-add-apt-repository -y ppa:ubuntu-cloud-archive/kilo-staging
+add-apt-repository -y cloud-archive:kilo
 
 # update and install
 apt-get update
