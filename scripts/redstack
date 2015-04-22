@@ -71,7 +71,7 @@ TROVE_LOGDIR=${TROVE_LOGDIR:-$DEST/logs}
 # filesystem that contains the datastore packages.
 DATASTORE_PKG_LOCATION=${DATASTORE_PKG_LOCATION:-}
 
-LAST_OCTET=$(hostname -I | sed 's/[0-9]*\.[0-9]*\.[0-9]*\.1\b//g' | cut -d' ' -f1 | sed 's/ //g' | cut -d'.' -f 4)
+LAST_OCTET=$(hostname -I | sed 's/[0-9]*\.[0-9]*\.[0-9]*\.1\b//g' | sed 's/ //g' | cut -d' ' -f1 | cut -d'.' -f4)
 export BRIDGE_IP=10.${LAST_OCTET}.0.1
 export FIXED_RANGE=10.${LAST_OCTET}.0.0/24
 export NETWORK_GATEWAY=10.${LAST_OCTET}.0.1
