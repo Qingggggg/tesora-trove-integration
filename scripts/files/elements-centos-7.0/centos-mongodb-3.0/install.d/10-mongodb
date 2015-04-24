@@ -14,7 +14,7 @@ gpgcheck=0
 enabled=1
 EOL
 
-yum -y install -y mongodb-org-3.0.0 mongodb-org-server-3.0.0 mongodb-org-shell-3.0.0 mongodb-org-mongos-3.0.0 mongodb-org-tools-3.0.0
+yum -y install -y mongodb-org-3.0.2 mongodb-org-server-3.0.2 mongodb-org-shell-3.0.2 mongodb-org-mongos-3.0.2 mongodb-org-tools-3.0.2
 
 echo "exclude=mongodb-org,mongodb-org-server,mongodb-org-shell,mongodb-org-mongos,mongodb-org-tools" >> /etc/yum.conf
 
