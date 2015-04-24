@@ -9,5 +9,10 @@ yum -y install java
 
 yum -y install dsc21
 
+# The Python Driver 2.0 for Apache Cassandra.
+pip install cassandra-driver
+# Sorted sets support for the Python driver.
+pip install blist
+
 systemctl start cassandra 
 chkconfig cassandra on

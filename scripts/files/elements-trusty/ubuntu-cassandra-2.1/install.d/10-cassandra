@@ -22,6 +22,11 @@ echo "cassandra hold" | dpkg --set-selections
 
 service cassandra stop
 
+# The Python Driver 2.0 for Apache Cassandra.
+pip install cassandra-driver
+# Sorted sets support for the Python driver.
+pip install blist
+
 rm -rf /var/lib/cassandra/data/system/*
 
 service cassandra start
