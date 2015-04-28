@@ -9,3 +9,10 @@ set -o xtrace
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get -y install mongodb-org=3.0.2 mongodb-org-server=3.0.2 mongodb-org-shell=3.0.2 mongodb-org-mongos=3.0.2 mongodb-org-tools=3.0.2
+
+# We want to enable smallfiles on boot to speed things up
+# Knowing that after boot Trove will replace the configuration
+# file with something that doesn't have smallFiles enabled
+
+# Note: 3.0 on ubuntu still appears to use the old non-YAML file format
+echo "smallfiles=true" >> /etc/mongod.conf

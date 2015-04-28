@@ -27,4 +27,11 @@ sed -i -e "s;^\(#\s*\)\?logpath[ \t]*=.*;logpath = /var/log/mongodb;" /etc/mongo
 mv /var/lib/mongo /var/lib/mongodb
 mv /var/log/mongo /var/log/mongodb
 
+# We want to enable smallfiles on boot to speed things up
+# Knowing that after boot Trove will replace the configuration
+# file with something that doesn't have smallFiles enabled
+
+# Note: 2.6 on ubuntu still appears to use the old non-YAML file format
+echo "smallfiles=true" >> /etc/mongod.conf
+
 chkconfig mongod on
