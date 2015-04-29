@@ -6,7 +6,9 @@ set -o xtrace
 yum install -y http://yum.postgresql.org/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-1.noarch.rpm
 
 yum install -y postgresql94-server postgresql94-contrib
-/usr/pgsql-9.4/bin/postgresql94-setup initdb
+
+# /usr/pgsql-9.4/bin/postgresql94-setup initdb
+su - postgres -c "/usr/pgsql-9.4/bin/initdb /var/lib/pgsql/9.4/data"
 
 mv /lib/systemd/system/postgresql-9.4.service /lib/systemd/system/postgresql.service
 
