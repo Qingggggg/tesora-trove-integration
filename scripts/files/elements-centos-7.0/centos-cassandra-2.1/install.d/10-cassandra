@@ -5,14 +5,12 @@ set -o xtrace
 
 export DEBIAN_FRONTEND=noninteractive
 
-yum -y install java
+yum -y install java dsc21
 
-yum -y install dsc21
+pip install -U setuptools
 
 # The Python Driver 2.0 for Apache Cassandra.
-pip install cassandra-driver
-# Sorted sets support for the Python driver.
-pip install blist
+pip install cassandra-driver blist
 
 systemctl start cassandra 
 chkconfig cassandra on
