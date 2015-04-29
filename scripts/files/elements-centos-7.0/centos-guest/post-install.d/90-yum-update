@@ -6,4 +6,4 @@
 set -e
 set -o xtrace
 
-yum update
+yum -y update
