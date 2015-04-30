@@ -7,8 +7,4 @@ source $_LIB/die
 
 [ -n "$TMP_HOOKS_PATH." ] || die "Temp hook path not set"
 
-if [ -e files/oracle ]; then
-   cp files/oracle/oracle-instantclient12.1-*.deb ${TMP_HOOKS_PATH}/.
-else
-    die "oracle deb files not found"
-fi
+scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-12.1/oracle-instanceclient12.1-*.deb $TMP_HOOKS_PATH/.
