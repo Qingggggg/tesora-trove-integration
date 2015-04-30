@@ -66,3 +66,8 @@ TROVECLIENT_REPO=https://github.com/Tesora/tesora-python-troveclient.git
 
 disable_service heat h-api h-api-cfn h-api-cw h-eng
 PRECACHE_IMAGES=False
+
+if [ ! -z $SMOKE_TEST ]; then
+    disable_service horizon
+    disable_service tempest
+fi
