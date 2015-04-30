@@ -7,4 +7,4 @@ source $_LIB/die
 
 [ -n "$TMP_HOOKS_PATH." ] || die "Temp hook path not set"
 
-scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-12.1/oracle-instanceclient12.1-*.deb $TMP_HOOKS_PATH/.
+scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-12.1/oracle-instantclient12.1-*.deb $TMP_HOOKS_PATH/.
