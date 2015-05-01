@@ -5,9 +5,10 @@ set -o xtrace
 
 export DEBIAN_FRONTEND=noninteractive
 
-apt-get install -qy curl
 echo "deb http://debian.datastax.com/community stable main" >> /etc/apt/sources.list.d/cassandra.sources.list
-curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
+
+apt-get install -qy wget
+wget -O - http://debian.datastax.com/debian/repo_key | apt-key add -
 
 apt-get update
 
