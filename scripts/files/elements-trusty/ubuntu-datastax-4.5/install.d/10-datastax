@@ -8,10 +8,10 @@ export DEBIAN_FRONTEND=noninteractive
 DATASTAX_USER="andrew_tesora.com"
 DATASTAX_PWD="cSIwj8bK6d33ih4"
 
-apt-get install -qy curl
+apt-get install -qy wget
 
 echo "deb http://${DATASTAX_USER}:${DATASTAX_PWD}@debian.datastax.com/enterprise stable main" >> /etc/apt/sources.list.d/datastax.sources.list
-curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
+wget -O - http://debian.datastax.com/debian/repo_key | apt-key add -
 
 apt-get update
 
