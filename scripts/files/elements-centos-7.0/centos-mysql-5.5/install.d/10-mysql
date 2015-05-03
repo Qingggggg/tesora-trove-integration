@@ -18,9 +18,20 @@ yum-config-manager --enable mysql55-community
 
 yum -y install mysql-community-server percona-xtrabackup
 
-# add and include for /etc/my.cnf.d to /etc/my.cnf
-MYSQL_CONF_D="/etc/my.cnf.d/"
+BASE_MY_CNF_FILE="/etc/my.cnf"
+MYSQL_CNF_DIR="/etc/mysql/"
+MYSQL_CNF_DIR_MY_CNF_FILE="${MYSQL_CNF_DIR}my.cnf"
+MYSQL_CONF_D="${MYSQL_CNF_DIR}conf.d/"
+
 mkdir -p "$MYSQL_CONF_D"
-echo "!includedir $MYSQL_CONF_D" >> "/etc/my.cnf"
+
+if [ ! -d "$BASE_MY_CNF_FILE" ]; then
+    # The MySQL startup script on CentOS does
+    # not handle multiple 'my.cnf' files.
+    # Make sure we only have one 'my.cnf'
+    # on the default lookup path.
+    mv "$BASE_MY_CNF_FILE" "$MYSQL_CNF_DIR_MY_CNF_FILE"
+    echo "!includedir $MYSQL_CONF_D" >> "$MYSQL_CNF_DIR_MY_CNF_FILE"
+fi
 
 systemctl enable mysqld

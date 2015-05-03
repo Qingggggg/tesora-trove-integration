@@ -8,9 +8,26 @@ set -o xtrace
 
 yum -y install Percona-Server-shared-55 Percona-Server-server-55 Percona-Server-client-55 percona-xtrabackup
 
-# add an include for /etc/my.cnf.d to /etc/my.cnf
-MYSQL_CONF_D="/etc/my.cnf.d/"
+BASE_MY_CNF_FILE="/etc/my.cnf"
+MYSQL_CNF_DIR="/etc/mysql/"
+MYSQL_CNF_DIR_MY_CNF_FILE="${MYSQL_CNF_DIR}my.cnf"
+MYSQL_CONF_D="${MYSQL_CNF_DIR}conf.d/"
+
 mkdir -p "$MYSQL_CONF_D"
-echo "!includedir $MYSQL_CONF_D" >> "/etc/my.cnf"
+
+if [ ! -d "$BASE_MY_CNF_FILE" ]; then
+    # Keep '/etc/my.cnf' with includes
+    # from the other config paths for datastores
+    # that lookup only in '/etc'.
+    # That file should contain only the includes
+    # and nothing else. Not all datastores
+    # handle duplicate setting values well.
+    # Watch for infinite include recursions.
+    # Keep the original permissions.
+    cp -p "$BASE_MY_CNF_FILE" "$MYSQL_CNF_DIR_MY_CNF_FILE"
+    echo "!includedir $MYSQL_CNF_DIR" > "$BASE_MY_CNF_FILE"
+    echo "!includedir $MYSQL_CONF_D" >> "$BASE_MY_CNF_FILE"
+    echo "!includedir $MYSQL_CONF_D" >> "$MYSQL_CNF_DIR_MY_CNF_FILE"
+fi
 
 systemctl enable mysqld
