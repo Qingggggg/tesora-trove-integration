@@ -34,4 +34,7 @@ if [ ! -d "$BASE_MY_CNF_FILE" ]; then
     echo "!includedir $MYSQL_CONF_D" >> "$MYSQL_CNF_DIR_MY_CNF_FILE"
 fi
 
+# DBAAS-424 - fix the mysql-systemd-start script to use the correct socket
+sed -i '/get_option  mysqld socket/s/$datadir/\/var\/lib\/mysql/' /usr/bin/mysql-systemd-start
+
 systemctl enable mysqld
