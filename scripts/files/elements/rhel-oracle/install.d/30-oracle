@@ -66,9 +66,9 @@ groupadd --gid 54324 asmoper
 groupadd --gid 54325 asmadmin
 groupadd --gid 54326 oper
 useradd --uid 54321 --gid oinstall --groups dba,oper,asmdba,asmoper oracle
-sudo echo oracle:oracle | /usr/sbin/chpasswd
+sudo echo oracle:hab7juKaya | /usr/sbin/chpasswd
 useradd --uid 54322 --gid oinstall --groups dba,asmadmin,asmdba,asmoper grid
-sudo echo grid:grid | /usr/sbin/chpasswd
+sudo echo grid:BewUF8ketr | /usr/sbin/chpasswd
 
 # 3.3.13 - Setting Shell Limits for the Grid and Oracle User
 cat <<EOT >> /etc/security/limits.d/99-grid-oracle-limits.conf
