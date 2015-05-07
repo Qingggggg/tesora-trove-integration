@@ -234,18 +234,6 @@ function fixup_broken_devstack() {
     :
 }
 
-function add_keypair() {
-    if [[ -z $(nova --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT keypair-list | grep mykey) ]]; then
-        exclaim "Adding mykey keypair to nova."
-        mkdir -p $USERHOME/.ssh
-        nova --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT keypair-add mykey > $USERHOME/.ssh/mykey
-        nova --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT keypair-show mykey | grep 'Public key:' | cut -d' ' -f3- > $USERHOME/.ssh/mykey.pub
-        chown -R $USER:$USER $USERHOME/.ssh
-        chmod 700 $USERHOME/.ssh && chmod 600 $USERHOME/.ssh/*
-        iniset $TROVE_CONF_DIR/trove-taskmanager.conf DEFAULT use_nova_key_name mykey
-    fi
-}
-
 function run_devstack() {
     exclaim "Running devstack..."
 
@@ -294,16 +282,6 @@ function cmd_install() {
     fixup_broken_devstack
     run_devstack
     exclaim "FINISHED INSTALL"
-}
-
-function cmd_add_keypair() {
-    sleep 3
-    cmd_stop
-    sleep 3
-    add_keypair
-    sleep 3
-    cmd_start
-    sleep 3
 }
 
 ###############################################################################
@@ -973,7 +951,6 @@ function run_command() {
     case "$1" in
         "install" ) cmd_install;;
         "test-init" ) cmd_test_init;;
-        "add-keypair" ) cmd_add_keypair;;
         "build-image" ) shift; cmd_build_image $@;;
         "initialize" ) cmd_initialize;;
         "unit-tests" ) cmd_unit_tests;;
@@ -1004,6 +981,7 @@ function run_command() {
         "wipe-queues" ) shift; cmd_wipe_queues $@;;
         "example-tests" ) shift; cmd_example_tests $@;;
         "repl" ) shift; cmd_repl $@;;
+        "source" ) echo "Sourced redstack.";;
         * )
             echo "'$1' not a valid command"
             exit 1
