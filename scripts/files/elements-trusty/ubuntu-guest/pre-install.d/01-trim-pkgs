@@ -22,7 +22,6 @@ apt-get -y purge acpid\
                  byobu\
                  command-not-found\
                  command-not-found-data\
-                 curl\
                  dbus\
                  dmidecode\
                  dosfstools\
