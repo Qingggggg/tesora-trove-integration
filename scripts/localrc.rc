@@ -12,6 +12,7 @@ TROVE_AUTH_CACHE_DIR=$TROVE_AUTH_CACHE_DIR
 # Enable the Trove plugin for devstack
 if [[ $USE_DEVSTACK_TROVE_PLUGIN = true ]]; then
     enable_plugin trove $OPENSTACK_GITSOURCE/trove
+    enable_plugin python-troveclient $OPENSTACK_GITSOURCE/python-troveclient
 fi
 
 # Enable Trove, Swift, and Heat
