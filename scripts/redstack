@@ -226,6 +226,10 @@ function install_devstack_code() {
         mkdir -p $PATH_DEVSTACK_SRC
         git clone $REPO_DEVSTACK $PATH_DEVSTACK_SRC
     fi
+
+    source $PATH_DEVSTACK_SRC/functions-common
+    source $PATH_DEVSTACK_SRC/functions
+
     PROJ_BRANCH=$(get_project_branch DEVSTACK_BRANCH $PROJECT_BRANCH)
     ENV_VARS="DEVSTACK_BRANCH' or 'PROJECT_BRANCH"
     git_checkout "devstack" "$PATH_DEVSTACK_SRC" "$PROJ_BRANCH" "$ENV_VARS"
@@ -266,7 +270,7 @@ function run_review_for() {
     do
         # This should be the ref spec for what we pull
         pushd $PATH_ARG
-        git pull https://review.openstack.org/p/openstack/$GIT_NAME refs/changes/$review
+        git_timed pull https://review.openstack.org/p/openstack/$GIT_NAME refs/changes/$review
         popd
     done
 }
@@ -482,7 +486,7 @@ function cmd_set_datastore() {
         VERSION="3.0"
     elif [ "$DATASTORE_TYPE" == "redis" ]; then
         PACKAGES=${PACKAGES:-"redis-server"}
-        VERSION="2.8"
+        VERSION="3.0"
     elif [ "$DATASTORE_TYPE" == "cassandra" ]; then
         PACKAGES=${PACKAGES:-"cassandra"}
         VERSION="2.1.0"
