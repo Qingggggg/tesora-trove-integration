@@ -3,6 +3,29 @@
 set -e
 set -o xtrace
 
+cat > "/etc/sysctl.d/10-postgresql-performance.conf" << _EOF_
+# See 'http://www.postgresql.org/docs/9.3/static/kernel-resources.html'
+# for best practices.
+# It is recommended to disable memory overcommit.
+vm.overcommit_memory=2
+
+_EOF_
+
+cat > "/etc/rc.local" << _EOF_
+# See 'http://www.postgresql.org/docs/9.3/static/kernel-resources.html'
+# Disable Linux kernel transparent huge pages. This feature is not supported by
+# by Postgres 9.3 and may negatively impact performance of the database.
+if test -f /sys/kernel/mm/redhat_transparent_hugepage/defrag; then
+  echo never > /sys/kernel/mm/redhat_transparent_hugepage/defrag
+fi
+if test -f /sys/kernel/mm/redhat_transparent_hugepage/enabled; then
+  echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+fi
+
+exit \$?
+
+_EOF_
+
 yum install -y http://yum.postgresql.org/9.3/fedora/fedora-21-x86_64/pgdg-fedora93-9.3-2.noarch.rpm
 
 yum install -y postgresql93-server postgresql93-contrib
