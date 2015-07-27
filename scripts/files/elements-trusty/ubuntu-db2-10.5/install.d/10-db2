@@ -12,7 +12,7 @@ DB2_PKG_LOCATION="/db2"
 mkdir ${DB2_PKG_LOCATION}
 cd ${DB2_PKG_LOCATION}
 
-tar -xvzf /tmp/in_target.d/v10.5_linux64_expc.tar.gz
+tar -xvzf /tmp/in_target.d/db2.tar.gz
 
 # installing dependencies
 apt-get install libaio1
@@ -41,3 +41,5 @@ su - db2inst1 -c "db2 update database manager configuration using svcename db2c_
 
 # Start the actual TCP/IP communication.
 su - db2inst1 -c "db2set DB2COMM=tcpip"
+
+rm -Rf /db2

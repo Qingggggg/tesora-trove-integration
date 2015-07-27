@@ -10,4 +10,4 @@ set -o xtrace
 
 [ -n "${TMP_HOOKS_PATH}" ] || die "Temp hook path not set"
 
-scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/db2-express-10.5/v10.5_linux64_expc.tar.gz $TMP_HOOKS_PATH/.
+scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/db2-express-10.5/v10.5_linuxx64_expc.tar.gz $TMP_HOOKS_PATH/db2.tar.gz
