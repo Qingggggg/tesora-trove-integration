@@ -1,0 +1,11 @@
+[[local|localrc]]
+
+disable_service heat h-api h-api-cfn h-api-cw h-eng
+
+PRECACHE_IMAGES=False
+
+if [ x"$SMOKE_TEST" != x"" ]; then
+    disable_service horizon
+    disable_service tempest
+fi
+
