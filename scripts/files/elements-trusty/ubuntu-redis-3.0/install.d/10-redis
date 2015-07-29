@@ -32,6 +32,8 @@ fi
 
 _EOF_
 
+add-apt-repository -y ppa:chris-lea/redis-server
+apt-get -y update
 apt-get install -y redis-server
 
 cat > "/etc/default/redis-server" << _EOF_
