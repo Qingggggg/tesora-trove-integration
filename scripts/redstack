@@ -608,6 +608,8 @@ function cmd_set_datastore() {
         VERSION="4.8"
     elif [ "$DATASTORE_TYPE" == "couchbase_ee" ]; then
         VERSION="4.1"
+    elif [ "$DATASTORE_TYPE" == "edb" ]; then
+        VERSION="9.4"
     else
         echo "Unrecognized datastore type. ($DATASTORE_TYPE)"
         exit 1
