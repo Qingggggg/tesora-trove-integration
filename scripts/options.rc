@@ -1,0 +1,14 @@
+UNIQUE_OCTETS=$(hostname -I | sed 's/[0-9]*\.[0-9]*\.[0-9]*\.1\b//g' | sed 's/[0-9a-z][0-9a-z]*:.*:[0-9a-z][0-9a-z]*//g' | sed 's/ /\n/g' | sed '/^$/d' | sort -bu | head -1 | cut -d'.' -f 3-4)
+export SUBNET=10.${UNIQUE_OCTETS}
+export BRIDGE_IP=${SUBNET}.1
+export NETWORK_GATEWAY=${BRIDGE_IP}
+export FIXED_RANGE=${SUBNET}.0/24
+echo "Using gatway: $NETWORK_GATEWAY"
+RESULT=$(sudo iptables -t nat -A POSTROUTING -s $FIXED_RANGE -o br100 -j MASQUERADE)
+
+LIBS_FROM_GIT_ALL_CLIENTS=false
+LIBS_FROM_GIT_ALL_OSLO=false
+
+TROVE_GIT_BASE=https://github.com
+TROVE_REPO=${TROVE_GIT_BASE}/Tesora/tesora-trove.git
+TROVECLIENT_REPO=${TROVE_GIT_BASE}/Tesora/tesora-python-troveclient.git
