@@ -10,9 +10,8 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt-get -y install mongodb-org=2.6.8 mongodb-org-server=2.6.8 mongodb-org-shell=2.6.8 mongodb-org-mongos=2.6.8 mongodb-org-tools=2.6.8
 
-# We want to enable smallfiles on boot to speed things up
-# Knowing that after boot Trove will replace the configuration
-# file with something that doesn't have smallFiles enabled
-
-# Note: 2.6 on ubuntu still appears to use the old non-YAML file format
-echo "smallfiles=true" >> /etc/mongod.conf
+# the following config changes are needed: smallfiles set to true, and bind_ip
+# set to default
+sed -i '/bind_ip/d' /etc/mongod.conf
+sed -i '/smallfiles/d' /etc/mongod.conf
+echo 'smallfiles = true' >> /etc/mongod.conf
