@@ -10,4 +10,10 @@ set -o xtrace
 
 [ -n "${TMP_HOOKS_PATH}" ] || die "Temp hook path not set"
 
-scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/db2-express-10.5/v10.5_linuxx64_expc.tar.gz $TMP_HOOKS_PATH/db2.tar.gz
+
+if [ -f "${DATASTORE_PKG_LOCATION}" ]; then
+    echo "Found the DB2 Express-C packages in ${DATASTORE_PKG_LOCATION}."
+    dd if="${DATASTORE_PKG_LOCATION}" of=${TMP_HOOKS_PATH}/db2.tar.gz
+else
+    scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/db2-express-10.5/v10.5_linuxx64_expc.tar.gz $TMP_HOOKS_PATH/db2.tar.gz
+fi
