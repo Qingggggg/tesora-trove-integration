@@ -9,3 +9,4 @@ source $_LIB/die
 
 scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-11.2/p13390677_112040_Linux-x86-64_1of7.zip $TMP_HOOKS_PATH/.
 scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-11.2/p13390677_112040_Linux-x86-64_2of7.zip $TMP_HOOKS_PATH/.
+scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-11.2/General_Purpose_ArchiveLog.* $TMP_HOOKS_PATH/.
