@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# CONTEXT: GUEST during CONSTRUCTION as ROOT
+# PURPOSE: Install controller base required packages
+
+set -e
+set -o xtrace
+
+yum -y install libaio perl perl-Data-Dumper
+
+groupadd mysql
+useradd -r -g mysql mysql
+
+rpm -i /tmp/in_target.d/MySQL-shared-advanced-5.6.26-1.el7.x86_64.rpm
+rpm -i /tmp/in_target.d/MySQL-server-advanced-5.6.26-1.el7.x86_64.rpm
+rpm -i /tmp/in_target.d/MySQL-client-advanced-5.6.26-1.el7.x86_64.rpm
+
+yum -y install percona-xtrabackup
+
+mysql_install_db --user=mysql
+
+# DBAAS-904 - code expects /etc/my.cnf and /etc/mysql/conf.d
+BASE_MY_CNF_FILE="/etc/my.cnf"
+MYSQL_CONF_D_DIR="/etc/mysql/conf.d"
+mkdir -p "$MYSQL_CONF_D_DIR"
+
+cp /usr/share/mysql/my-default.cnf $BASE_MY_CNF_FILE
+
+echo "!includedir $MYSQL_CONF_D_DIR" >> "$BASE_MY_CNF_FILE"
