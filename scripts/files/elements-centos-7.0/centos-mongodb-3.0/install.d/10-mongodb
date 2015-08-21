@@ -38,7 +38,8 @@ sed -i -e "s;^\(#\s*\)\?PIDFILE[ \t]*=.*;PIDFILE=\`awk -F=  '/^pidfilepath\\\s*=
 sed -i -e "s/.*init.d\/functions.*/SYSTEMCTL_SKIP_REDIRECT=true\n&/" /etc/init.d/mongod
 echo "d /var/run/mongodb 0755 mongod mongod" > /lib/tmpfiles.d/mongodb.conf
 sed -i -e "s;^\(#\s*\)\?dbpath[ \t]*=.*;dbpath = /var/lib/mongodb;" /etc/mongod.conf
-sed -i -e "s;^\(#\s*\)\?logpath[ \t]*=.*;logpath = /var/log/mongodb;" /etc/mongod.conf
+sed -i -e "s;^\(#\s*\)\?logpath[ \t]*=.*;logpath = /var/log/mongodb/mongod.log;" /etc/mongod.conf
+sed -i -e "s;^\(#\s*\)\?fork[ \t]*=.*;fork = false;" /etc/mongod.conf
 [ -d "/var/lib/mongo" ] && mv /var/lib/mongo /var/lib/mongodb
 [ -d "/var/log/mongo" ] && mv /var/log/mongo /var/log/mongodb
 
