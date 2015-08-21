@@ -9,6 +9,6 @@ RESULT=$(sudo iptables -t nat -A POSTROUTING -s $FIXED_RANGE -o br100 -j MASQUER
 LIBS_FROM_GIT_ALL_CLIENTS=false
 LIBS_FROM_GIT_ALL_OSLO=false
 
-TROVE_GIT_BASE=https://github.com
-TROVE_REPO=${TROVE_GIT_BASE}/Tesora/tesora-trove.git
-TROVECLIENT_REPO=${TROVE_GIT_BASE}/Tesora/tesora-python-troveclient.git
+export TROVE_GIT_BASE=https://github.com
+export TROVE_REPO=${TROVE_GIT_BASE}/Tesora/tesora-trove.git
+export TROVECLIENT_REPO=${TROVE_GIT_BASE}/Tesora/tesora-python-troveclient.git
