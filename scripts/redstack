@@ -230,6 +230,20 @@ function install_devstack_code() {
         mkdir -p $PATH_DEVSTACK_SRC
         git clone $DEVSTACK_REPO $PATH_DEVSTACK_SRC
     fi
+    # See if we need to switch devstack to a new branch (i.e. 'stable/kilo')
+    if [ -n "$DEVSTACK_BRANCH" ]; then
+        pushd $PATH_DEVSTACK_SRC
+        DEVSTACK_BRANCHES=$(git branch -r | grep -v "origin/HEAD")
+        if [[ "$DEVSTACK_BRANCHES" =~ "origin/$DEVSTACK_BRANCH" ]]; then
+            exclaim "${COLOR_BLUE}Using devstack branch '$DEVSTACK_BRANCH'${COLOR_NONE}"
+            git checkout "$DEVSTACK_BRANCH"
+        else
+            exclaim "${COLOR_RED}Branch '$DEVSTACK_BRANCH' not found in devstack, exiting${COLOR_NONE}"
+            echo "Please set 'DEVSTACK_BRANCH' to a valid branch and try again."
+            exit 1
+        fi
+        popd
+    fi
 
     source $PATH_DEVSTACK_SRC/functions-common
     source $PATH_DEVSTACK_SRC/functions
@@ -1079,7 +1093,13 @@ function cmd_clone_projects() {
     for project in $(cat $PROJECT_LIST_FILES); do
         if [ ! -d $PATH_DEVSTACK_OUTPUT/$project ]; then
             echo "Creating a new clone of $project..."
-            git_clone $GIT_OPENSTACK/"$project".git ${PATH_DEVSTACK_OUTPUT}/$project master
+
+            GIT_BRANCH=${DEVSTACK_BRANCH:-master}
+            if [ $project == "diskimage-builder" ] || [ $project == "tripleo-image-elements" ]; then
+                GIT_BRANCH="master"
+            fi
+
+            git_clone $OPENSTACK_GITSOURCE/"$project".git ${PATH_DEVSTACK_OUTPUT}/$project $GIT_BRANCH
         else
             if [ $UPDATE_PROJECTS != "force_update" ]; then
                 echo "$project was already cloned or exists in a shared folder. Ignoring..."
