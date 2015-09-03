@@ -8,8 +8,15 @@ yum -y install http://rdoproject.org/repos/openstack-kilo/rdo-release-kilo.rpm
 
 yum install -y http://tesora-dbaas.tesora.com/tesora-release/tesora-dbaas-${DBAAS_RELEASE}-${DBAAS_REPO}-${DBAAS_VERSION}-0.x86_64.rpm
 
+cat /etc/yum.repos.d/tesora.repo
+yum repolist
+
 yum install -y openssl-devel
 yum install -y python-qpid
+
+cat /etc/yum.repos.d/tesora.repo
+yum repolist
+
 yum install -y tesora-dbaas-guestagent
 
 chkconfig openstack-trove-guestagent on
