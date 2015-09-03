@@ -6,4 +6,4 @@ fi
 set -eu
 set -o pipefail
 
-sed -i '/secure_path/ s/$/:\/usr\/local\/bin/' /etc/sudoers
+echo exclude=centos-release-*,redhat-release-* >> /etc/yum.conf

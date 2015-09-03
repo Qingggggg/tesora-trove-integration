@@ -4,6 +4,14 @@ set -ex
 set -o xtrace
 
 export DEBIAN_FRONTEND=noninteractive
+
+cat > "/etc/sysctl.d/10-cassandra-performance.conf" << _EOF_
+# See 'http://docs.datastax.com/en/cassandra/2.1/cassandra/install/installRecommendSettings.html'
+# for recommended production settings.
+vm.max_map_count = 131072
+
+_EOF_
+
 apt-get install -qy curl
 echo "deb http://debian.datastax.com/community stable main" >> /etc/apt/sources.list.d/cassandra.sources.list
 curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
