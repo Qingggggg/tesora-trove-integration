@@ -19,21 +19,11 @@ yum -y install yum-utils
 
 yum -y install mysql-community-server percona-xtrabackup
 
+# DBAAS-904 - code expects /etc/my.cnf and /etc/mysql/conf.d
 BASE_MY_CNF_FILE="/etc/my.cnf"
-MYSQL_CNF_DIR="/etc/mysql/"
-MYSQL_CNF_DIR_MY_CNF_FILE="${MYSQL_CNF_DIR}my.cnf"
-MYSQL_CONF_D="${MYSQL_CNF_DIR}conf.d/"
-
-mkdir -p "$MYSQL_CONF_D"
-
-if [ ! -d "$BASE_MY_CNF_FILE" ]; then
-    # The MySQL startup script on CentOS does
-    # not handle multiple 'my.cnf' files.
-    # Make sure we only have one 'my.cnf'
-    # on the default lookup path.
-    mv "$BASE_MY_CNF_FILE" "$MYSQL_CNF_DIR_MY_CNF_FILE"
-    echo "!includedir $MYSQL_CONF_D" >> "$MYSQL_CNF_DIR_MY_CNF_FILE"
-fi
+MYSQL_CONF_D_DIR="/etc/mysql/conf.d"
+mkdir -p "$MYSQL_CONF_D_DIR"
+echo "!includedir $MYSQL_CONF_D" >> "$BASE_MY_CNF_FILE"
 
 # DBAAS-424 - fix the mysql-systemd-start script to use the correct socket
 sed -i '/get_option  mysqld socket/s/$datadir/\/var\/lib\/mysql/' /usr/bin/mysql-systemd-start
