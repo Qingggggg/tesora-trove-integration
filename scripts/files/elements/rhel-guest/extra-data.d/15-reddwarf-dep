@@ -8,7 +8,7 @@ set -o xtrace
 
 source $_LIB/die
 
-REQUIREMENTS_FILE=${REDSTACK_SCRIPTS}/files/requirements/rhel-requirements.txt
+REQUIREMENTS_FILE=${REDSTACK_SCRIPTS}/files/requirements/rhel-requirements-default.txt
 
 [ -n "$TMP_HOOKS_PATH." ] || die "Temp hook path not set"
 [ -e ${REQUIREMENTS_FILE} ] || die "Requirements not found"
