@@ -10,5 +10,12 @@ yum install -y postgresql93-server postgresql93-contrib
 
 mv /lib/systemd/system/postgresql-9.3.service /lib/systemd/system/postgresql.service
 
+# Create a volatile directory for runtime files.
+echo "d /var/run/postgresql/ 0755 postgres postgres" > /lib/tmpfiles.d/postgresql.conf
+
+# Install the native Python client.
+yum install -y postgresql-devel python-devel
+pip install psycopg2
+
 systemctl enable postgresql.service
 systemctl start postgresql.service

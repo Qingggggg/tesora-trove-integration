@@ -16,5 +16,12 @@ mv /lib/systemd/system/postgresql-9.4.service /lib/systemd/system/postgresql.ser
 
 sed -i 's/PGDATA=\/var\/lib\/pgsql\/9.4\/data/PGDATA=\/var\/lib\/postgresql\/9.4\/data/' /lib/systemd/system/postgresql.service
 
+# Create a volatile directory for runtime files.
+echo "d /var/run/postgresql/ 0755 postgres postgres" > /lib/tmpfiles.d/postgresql.conf
+
+# Install the native Python client.
+yum install -y postgresql-devel python-devel
+pip install psycopg2
+
 systemctl enable postgresql.service
 systemctl start postgresql.service
