@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+set -o xtrace
+
+export DEBIAN_FRONTEND=noninteractive
+
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x7A54FC1AE61BB490
+
+# TEMP
+# add-apt-repository -y cloud-archive:liberty
+add-apt-repository -y ppa:ubuntu-cloud-archive/liberty-staging
