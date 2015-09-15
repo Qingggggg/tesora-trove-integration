@@ -109,6 +109,10 @@ EOT
 ORACLE_BASE=/u01/app/oracle
 ORACLE_INST=$ORACLE_BASE/oracle-software
 ORACLE_HOME=$ORACLE_BASE/product/12.1.0/dbhome_1
+SETUP_RSP=/home/oracle/oracle-setup.rsp
+
+cp $(dirname $0)/files/oracle-setup.rsp $SETUP_RSP
+chown oracle.oinstall $SETUP_RSP
 
 mkdir -p $ORACLE_INST
 chown -R oracle.oinstall /u01
@@ -123,7 +127,7 @@ runuser -l oracle -c "unzip $ORACLE_INST/linuxamd64_12102_database_1of2.zip -d $
 runuser -l oracle -c "unzip $ORACLE_INST/linuxamd64_12102_database_2of2.zip -d $ORACLE_INST"
 
 # Run the installer
-runuser -l oracle -c "$ORACLE_INST/database/runInstaller -silent -waitforcompletion -responseFile /home/oracle/oracle-setup.rsp"
+runuser -l oracle -c "$ORACLE_INST/database/runInstaller -silent -waitforcompletion -responseFile $SETUP_RSP"
 
 # Run root scripts required by Oracle after installation
 /u01/app/oraInventory/orainstRoot.sh
