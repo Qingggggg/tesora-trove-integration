@@ -3,8 +3,6 @@
 set -e
 set -o xtrace
 
-yum -y install http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
-
 # TEMP
 # yum -y install http://rdoproject.org/repos/openstack-liberty/rdo-release-liberty.rpm
 yum -y install http://rdo.fedorapeople.org/openstack-kilo/rdo-release-kilo.rpm
