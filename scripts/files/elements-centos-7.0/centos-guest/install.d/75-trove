@@ -4,7 +4,10 @@
 
 yum -y install http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
 
-yum -y install http://rdoproject.org/repos/openstack-kilo/rdo-release-kilo.rpm
+# TEMP
+# yum -y install http://rdoproject.org/repos/openstack-liberty/rdo-release-liberty.rpm
+yum -y install http://rdo.fedorapeople.org/openstack-kilo/rdo-release-kilo.rpm
+yum-config-manager --add-repo http://trunk.rdoproject.org/centos70/current/delorean.repo
 
 yum install -y http://tesora-dbaas.tesora.com/tesora-release/tesora-dbaas-${DBAAS_RELEASE}-${DBAAS_REPO}-${DBAAS_VERSION}-0.x86_64.rpm
 
