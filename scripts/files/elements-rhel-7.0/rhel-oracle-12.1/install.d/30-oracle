@@ -126,12 +126,15 @@ chown oracle.oinstall $ORACLE_INST/linuxamd64_12102_database_2of2.zip
 runuser -l oracle -c "unzip $ORACLE_INST/linuxamd64_12102_database_1of2.zip -d $ORACLE_INST"
 runuser -l oracle -c "unzip $ORACLE_INST/linuxamd64_12102_database_2of2.zip -d $ORACLE_INST"
 
+# Run the preinstall
+yum -y localinstall /tmp/in_target.d/oracle-rdbms-server-12cR1-preinstall-1.0-3.el7.x86_64.rpm
+
 # Run the installer
-runuser -l oracle -c "$ORACLE_INST/database/runInstaller -silent -waitforcompletion -responseFile $SETUP_RSP"
+runuser -l oracle -c "$ORACLE_INST/database/runInstaller -silent -waitforcompletion -ignoreSysPrereqs -ignorePrereq -showProgress -responseFile $SETUP_RSP"
 
 # Run root scripts required by Oracle after installation
 /u01/app/oraInventory/orainstRoot.sh
-/u01/app/oracle/product/11.2.0/dbhome_1/root.sh
+/u01/app/oracle/product/12.1.0/dbhome_1/root.sh
 
 # Install the Oracle listener
 runuser -l oracle -c "cp $ORACLE_INST/database/response/netca.rsp /home/oracle"
