@@ -117,14 +117,15 @@ chown oracle.oinstall $SETUP_RSP
 mkdir -p $ORACLE_INST
 chown -R oracle.oinstall /u01
 
-cp /tmp/in_target.d/linuxamd64_12102_database_1of2.zip $ORACLE_INST/
-cp /tmp/in_target.d/linuxamd64_12102_database_2of2.zip $ORACLE_INST/
-
+mv /tmp/in_target.d/linuxamd64_12102_database_1of2.zip $ORACLE_INST/
 chown oracle.oinstall $ORACLE_INST/linuxamd64_12102_database_1of2.zip
-chown oracle.oinstall $ORACLE_INST/linuxamd64_12102_database_2of2.zip
-
 runuser -l oracle -c "unzip $ORACLE_INST/linuxamd64_12102_database_1of2.zip -d $ORACLE_INST"
+rm $ORACLE_INST/linuxamd64_12102_database_1of2.zip
+
+mv /tmp/in_target.d/linuxamd64_12102_database_2of2.zip $ORACLE_INST/
+chown oracle.oinstall $ORACLE_INST/linuxamd64_12102_database_2of2.zip
 runuser -l oracle -c "unzip $ORACLE_INST/linuxamd64_12102_database_2of2.zip -d $ORACLE_INST"
+rm $ORACLE_INST/linuxamd64_12102_database_2of2.zip
 
 # Run the preinstall
 yum -y localinstall /tmp/in_target.d/oracle-rdbms-server-12cR1-preinstall-1.0-3.el7.x86_64.rpm
