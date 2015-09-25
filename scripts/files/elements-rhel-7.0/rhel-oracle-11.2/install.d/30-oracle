@@ -112,7 +112,7 @@ yum -y install java-1.7.0-openjdk-devel
 # Unpack Oracle installation files
 ORACLE_BASE=/u01/app/oracle
 ORACLE_INST=$ORACLE_BASE/oracle-software
-ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1
+ORACLE_HOME=$ORACLE_BASE/product/dbaas
 
 mkdir -p $ORACLE_INST
 chown -R oracle.oinstall /u01
@@ -159,7 +159,7 @@ set -e
 
 # Run root scripts required by Oracle after installation
 /u01/app/oraInventory/orainstRoot.sh
-/u01/app/oracle/product/11.2.0/dbhome_1/root.sh
+/u01/app/oracle/product/dbaas/root.sh
 
 # Install the Oracle listener
 runuser -l oracle -c "cp $ORACLE_INST/database/response/netca.rsp /home/oracle"

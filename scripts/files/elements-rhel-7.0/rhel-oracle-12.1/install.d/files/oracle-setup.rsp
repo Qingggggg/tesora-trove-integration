@@ -88,7 +88,7 @@ SELECTED_LANGUAGES=en
 #-------------------------------------------------------------------------------
 # Specify the complete path of the Oracle Home. 
 #-------------------------------------------------------------------------------
-ORACLE_HOME=/u01/app/oracle/product/12.1.0/dbhome_1
+ORACLE_HOME=/u01/app/oracle/product/dbaas
 
 #-------------------------------------------------------------------------------
 # Specify the complete path of the Oracle Base. 
