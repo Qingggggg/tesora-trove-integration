@@ -10,3 +10,4 @@ source $_LIB/die
 scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-12.1/linuxamd64_12102_database_1of2.zip $TMP_HOOKS_PATH/.
 scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-12.1/linuxamd64_12102_database_2of2.zip $TMP_HOOKS_PATH/.
 scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-12.1/oracle-rdbms-server-12cR1-preinstall-1.0-3.el7.x86_64.rpm $TMP_HOOKS_PATH/.
+scp -o StrictHostKeyChecking=no gw2.elasticdb.org:/mnt/opt/build/oracle-12.1/General_Purpose_ArchiveLog121.* $TMP_HOOKS_PATH/.
