@@ -6,9 +6,11 @@ set -o xtrace
 cat > "/etc/sysctl.d/10-postgresql-performance.conf" << _EOF_
 # See 'http://www.postgresql.org/docs/9.4/static/kernel-resources.html'
 # for best practices.
-# It is recommended to disable memory overcommit.
-#vm.overcommit_memory=2
-#vm.nr_hugepages=128
+# It is recommended to disable memory overcommit,
+# but the Python interpreter may require it on smaller flavors.
+# We therefore stick with the heuristic overcommit setting.
+vm.overcommit_memory=0
+vm.nr_hugepages=64
 
 _EOF_
 
