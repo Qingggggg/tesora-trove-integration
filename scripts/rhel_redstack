@@ -5,7 +5,7 @@ set -e
 [ -n "$DIB_LOCAL_IMAGE" ] || { echo "DIB_LOCAL_IMAGE not set"; exit 1; }
 
 export DISTRO=rhel
-export GUEST_USERNAME=fedora
+export GUEST_USERNAME=${GUEST_USERNAME:-fedora}
 
 # This is used as the 'package' during kick-start to
 # prevent the guest failing on startup since it can't
