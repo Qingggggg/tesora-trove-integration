@@ -583,7 +583,7 @@ function cmd_set_datastore() {
 
     cmd_stop
     iniset $TROVE_CONF DEFAULT default_datastore "$DATASTORE_TYPE"
-    sleep 1.5
+    sleep 5
     cmd_start
 }
 
