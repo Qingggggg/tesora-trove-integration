@@ -3,7 +3,30 @@
 set -e
 set -o xtrace
 
-yum install -y postgresql94-server postgresql94-contrib
+
+yum install -y postgresql94-server postgresql94-contrib postgresql94-devel gcc
+
+dev_pkgs="readline-devel zlib-devel krb5-devel openssl-devel pam-devel libxml2-devel libxslt-devel"
+
+yum install -y $dev_pkgs
+
+# We need pg_config to be accessible on the path
+mkdir -p /tmp/build
+cd /tmp/build
+git clone https://github.com/vmware/pg_rewind.git --branch REL9_4_STABLE
+git clone https://github.com/postgres/postgres.git --branch REL9_4_STABLE
+
+ln -s /usr/pgsql-9.4/bin/pg_config /usr/bin/pg_config
+
+cd pg_rewind
+make USE_PGXS=1 top_srcdir=/tmp/build/postgres install
+ln -s /usr/pgsql-9.4/bin/pg_rewind /usr/bin/pg_rewind
+
+# Cleanup
+
+cd
+rm -rf /tmp/build
+yum remove -y $dev_pkgs
 
 # Though /var/lib/pgsql is the preferred directory, need to move it as
 # this is where the volume will be mounted
