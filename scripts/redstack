@@ -114,7 +114,7 @@ fi
 
 # set up respective package managers
 if is_fedora; then
-    PKG_MGR=yum
+    PKG_MGR=dnf
     PKG_GET_ARGS="-y"
 else
     PKG_MGR=apt-get
@@ -224,14 +224,12 @@ function install_prep_packages() {
     exclaim 'Updating dependencies (part 1a)...'
     pkg_update
     exclaim 'Installing dependencies (part 1b)...'
+    pkg_install python-pip
     if is_fedora; then
-      # need to avoid packaged pip/dep problems
-      sudo yum remove -y python-pip
-      pkg_install python-setuptools
-      sudo easy_install pip
+      # python-mysql obsoletes MySQL-python
+      sudo dnf remove -y python-mysql || true
       pkg_install git gettext
     else
-      pkg_install python-pip
       pkg_install git-core kvm-ipxe gettext
     fi
     sudo -H $HTTP_PROXY pip install --upgrade pip dib-utils
@@ -263,9 +261,14 @@ function install_devstack_code() {
     source $PATH_DEVSTACK_SRC/functions-common
     source $PATH_DEVSTACK_SRC/functions
 
-    PROJ_BRANCH=$(get_project_branch DEVSTACK_BRANCH $PROJECT_BRANCH)
-    ENV_VARS="DEVSTACK_BRANCH' or 'PROJECT_BRANCH"
-    git_checkout "devstack" "$PATH_DEVSTACK_SRC" "$PROJ_BRANCH" "$ENV_VARS"
+    # Switch to a branch if specified.  The order the variables are checked is:
+    # DEVSTACK_BRANCH then PROJECT_BRANCH
+    BRANCH_SPECIFIED=$(test -z "${DEVSTACK_BRANCH}${PROJECT_BRANCH}" || echo 'True')
+    if [[ "${BRANCH_SPECIFIED}" = "True" ]]; then
+        PROJ_BRANCH=$(get_project_branch DEVSTACK_BRANCH $PROJECT_BRANCH)
+        ENV_VARS="DEVSTACK_BRANCH' or 'PROJECT_BRANCH"
+        git_checkout "devstack" "$PATH_DEVSTACK_SRC" "$PROJ_BRANCH" "$ENV_VARS"
+    fi
 
     exclaim "Installing devstack projects..."
     # Ensures present user can get to the devstack dirs
@@ -739,9 +742,10 @@ function cmd_test_init() {
 
     if [[ -n $KEY_DIR ]]; then
         exclaim "Installing the SSH key from $KEY_DIR to the test environment."
-        mkdir -p $USERHOME/.ssh
+        mkdir -m 700 -p $USERHOME/.ssh
         install -b --mode 0400 $KEY_DIR/id_rsa $USERHOME/.ssh
         cat $KEY_DIR/authorized_keys >> $USERHOME/.ssh/authorized_keys
+        chmod 600 $USERHOME/.ssh/authorized_keys
     fi
 }
 
@@ -1126,11 +1130,12 @@ function cmd_dsvm_gate_tests() {
             --internalurl 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' --adminurl 'http://'$NETWORK_GATEWAY':8080'
         openstack endpoint delete $SWIFT_ENDPOINT
     else
-        SWIFT_ENDPOINTS=$(openstack --debug endpoint list --os-auth-type v3password --os-auth-url $KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:5000/v3 --os-identity-api-version=3 --service swift -c ID -f value)
-        openstack --debug endpoint create --os-auth-type v3password --os-auth-url $KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:5000/v3 --os-identity-api-version=3 swift public 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' --region RegionOne
-        openstack --debug endpoint create --os-auth-type v3password --os-auth-url $KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:5000/v3 --os-identity-api-version=3 swift internal 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' --region RegionOne
-        openstack --debug endpoint create --os-auth-type v3password --os-auth-url $KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:5000/v3 --os-identity-api-version=3 swift admin 'http://'$NETWORK_GATEWAY':8080' --region RegionOne
-        echo $SWIFT_ENDPOINTS | xargs -n 1 openstack --debug endpoint delete --os-auth-type v3password --os-auth-url $KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:5000/v3 --os-identity-api-version=3
+        OS_CLIENT_ARGS="--os-auth-type v3password --os-auth-url $KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:5000/v3 --os-identity-api-version=3"
+        SWIFT_ENDPOINTS=$(openstack endpoint list $OS_CLIENT_ARGS --service swift -c ID -f value)
+        openstack endpoint create $OS_CLIENT_ARGS swift public 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' --region RegionOne
+        openstack endpoint create $OS_CLIENT_ARGS swift internal 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' --region RegionOne
+        openstack endpoint create $OS_CLIENT_ARGS swift admin 'http://'$NETWORK_GATEWAY':8080' --region RegionOne
+        echo $SWIFT_ENDPOINTS | xargs -n 1 openstack endpoint delete $OS_CLIENT_ARGS
     fi
     set +x
 
@@ -1163,23 +1168,33 @@ function cmd_clone_projects() {
                 git pull
             fi
         fi
+        # Switch to a branch if specified.  The order the variables are checked is:
+        # <PROJECT>_BRANCH then PROJECT_CLIENT_BRANCH (if a client) then PROJECT_BRANCH
+        # Note: For the Trove project, only TROVE_BRANCH and PYTHON_TROVECLIENT_BRANCH are used
         PROJECT_BRANCH_NAME=$(eval echo "${project}_BRANCH" | tr '[:lower:]-' '[:upper:]_')
-
-        # Set up the default branch and env var names for the project
-        DEFAULT_BRANCH="$PROJECT_BRANCH"
-        ENV_VARS="$PROJECT_BRANCH_NAME' or 'PROJECT_BRANCH"
-        # Don't use 'PROJECT_BRANCH' or 'PROJECT_CLIENT_BRANCH' for the Trove project
-        if [[ "$project" =~ "trove" ]]; then
-            DEFAULT_BRANCH=master
-            ENV_VARS="$PROJECT_BRANCH_NAME"
-        # Use 'PROJECT_CLIENT_BRANCH' first for clients
-        elif [[ "$project" =~ "client" ]]; then
-            DEFAULT_BRANCH="${PROJECT_CLIENT_BRANCH:-$PROJECT_BRANCH}"
-            ENV_VARS="$PROJECT_BRANCH_NAME' or 'PROJECT_CLIENT_BRANCH' or 'PROJECT_BRANCH"
+        PROJECT_BRANCH_VALUE=${!PROJECT_BRANCH_NAME}
+        # TROVE_BRANCH is defaulted to master if not set, so use the original value here
+        if [[ "$project" = "trove" ]]; then
+            PROJECT_BRANCH_VALUE=${TROVE_BRANCH_ORIG}
         fi
-        PROJ_BRANCH=$(get_project_branch $PROJECT_BRANCH_NAME $DEFAULT_BRANCH)
-        git_checkout "$project" "$PATH_DEVSTACK_OUTPUT/$project" "$PROJ_BRANCH" "$ENV_VARS"
-  done
+        BRANCH_SPECIFIED=$(test -z "${PROJECT_BRANCH_VALUE}${PROJECT_CLIENT_BRANCH}${PROJECT_BRANCH}" || echo 'True')
+        if [[ "${BRANCH_SPECIFIED}" = "True" ]]; then
+            # Set up the default branch and env var names for the project
+            DEFAULT_BRANCH="$PROJECT_BRANCH"
+            ENV_VARS="$PROJECT_BRANCH_NAME' or 'PROJECT_BRANCH"
+            # Don't use 'PROJECT_BRANCH' or 'PROJECT_CLIENT_BRANCH' for the Trove project
+            if [[ "$project" =~ "trove" ]]; then
+                DEFAULT_BRANCH=master
+                ENV_VARS="$PROJECT_BRANCH_NAME"
+            # Use 'PROJECT_CLIENT_BRANCH' first for clients
+            elif [[ "$project" =~ "client" ]]; then
+                DEFAULT_BRANCH="${PROJECT_CLIENT_BRANCH:-$PROJECT_BRANCH}"
+                ENV_VARS="$PROJECT_BRANCH_NAME' or 'PROJECT_CLIENT_BRANCH' or 'PROJECT_BRANCH"
+            fi
+            PROJ_BRANCH=$(get_project_branch $PROJECT_BRANCH_NAME $DEFAULT_BRANCH)
+            git_checkout "$project" "$PATH_DEVSTACK_OUTPUT/$project" "$PROJ_BRANCH" "$ENV_VARS"
+        fi
+    done
 }
 
 function cmd_repl() {
