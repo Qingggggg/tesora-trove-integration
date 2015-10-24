@@ -12,4 +12,4 @@ echo exclude=Percona-SQL* Percona-Server* Percona-XtraDB-Cluster* >> /etc/yum.co
 # coerce Fedora releasever to CentOS7 available from Percona
 sed -i "s|\$releasever|centos/7Server|g" /etc/yum.repos.d/percona-release.repo
 
-rpm -Va --nofiles --nodigest percona-xtrabackup
+rpm -Va --nofiles --nodigest percona-xtrabackup-22
