@@ -27,3 +27,5 @@ mkdir -p "$MYSQL_CONF_D_DIR"
 cp /usr/share/mysql/my-default.cnf $BASE_MY_CNF_FILE
 
 echo "!includedir $MYSQL_CONF_D_DIR" >> "$BASE_MY_CNF_FILE"
+
+chkconfig --del mysql
