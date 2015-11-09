@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cat > "/etc/init/mongos.conf" << _EOF_
+cat > "/etc/init/mongos.conf" << '_EOF_'
 limit fsize unlimited unlimited  # (file size)
 limit cpu unlimited unlimited    # (cpu time)
 limit as unlimited unlimited     # (virtual memory size)

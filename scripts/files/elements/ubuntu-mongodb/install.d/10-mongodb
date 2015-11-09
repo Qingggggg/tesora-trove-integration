@@ -36,7 +36,7 @@ sed -i '/bindIp/d' /etc/mongod.conf
 # need to use smallFiles until the device is mounted
 sed -i 's/#  mmapv1:/  mmapv1:\n    smallFiles: true/' /etc/mongod.conf
 
-cat > "/etc/init/mongos.conf" << _EOF_
+cat > "/etc/init/mongos.conf" << '_EOF_'
 limit fsize unlimited unlimited  # (file size)
 limit cpu unlimited unlimited    # (cpu time)
 limit as unlimited unlimited     # (virtual memory size)
