@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 cat > "/etc/init/mongos.conf" << '_EOF_'
 limit fsize unlimited unlimited  # (file size)
