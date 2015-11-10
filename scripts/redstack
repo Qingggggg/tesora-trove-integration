@@ -759,6 +759,9 @@ function cmd_build_image() {
     sudo $HTTP_PROXY $PKG_MGR $PKG_GET_ARGS update
     sudo $HTTP_PROXY $PKG_MGR $PKG_GET_ARGS install qemu
     sudo -H $HTTP_PROXY pip install --upgrade pip dib-utils
+
+    install_devstack_code
+
     cmd_clone_projects do_not_force_update $REDSTACK_SCRIPTS/image-projects-list
 
     exclaim "Use tripleo-diskimagebuilder to actually build the Trove Guest Agent Image."
@@ -1100,10 +1103,13 @@ function cmd_dsvm_gate_tests() {
     NETWORK_GATEWAY=${4:-'10.1.0.1'}
     ESCAPED_PATH_TROVE=${5:-'\/opt\/stack\/new\/trove'}
 
-    # Ensure we have access to the clouds.yaml file set up by devstack-gate
-    sudo mkdir -p ~/.config/openstack
-    sudo ln -s $DEST/.config/openstack/clouds.yaml ~/.config/openstack/clouds.yaml
-    sudo chown -R $(whoami) ~/.config
+    if [[ $BRANCH_OVERRIDE == "stable/liberty" || $BRANCH_OVERRIDE == "stable/liberty" ]]; then
+        # Devstack in liberty doesn't copy the clouds.yaml file to /etc so we need to
+        # ensure we have access to the clouds.yaml file set up by devstack-gate
+        sudo mkdir -p ~/.config/openstack
+        sudo ln -s $DEST/.config/openstack/clouds.yaml ~/.config/openstack/clouds.yaml
+        sudo chown -R $(whoami) ~/.config
+    fi
 
     # Devstack vm-gate runs as the jenkins user, but needs to connect to the guest image as ubuntu
     echo "User=ubuntu" >> /home/jenkins/.ssh/config
