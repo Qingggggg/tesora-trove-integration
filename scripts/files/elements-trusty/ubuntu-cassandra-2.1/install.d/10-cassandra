@@ -15,7 +15,7 @@ _EOF_
 echo "deb http://debian.datastax.com/community stable main" >> /etc/apt/sources.list.d/cassandra.sources.list
 
 apt-get install -qy wget
-wget -O - http://debian.datastax.com/debian/repo_key | apt-key add -
+wget -q -O - http://debian.datastax.com/debian/repo_key | apt-key add -
 
 apt-get update
 

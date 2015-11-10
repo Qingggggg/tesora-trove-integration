@@ -31,7 +31,7 @@ exit \$?
 
 _EOF_
 
-apt-get -y install postgresql-9.4
+apt-get -y install postgresql-9.4 postgresql-contrib-9.4
 
 # Install the native Python client.
 apt-get -y install libpq-dev

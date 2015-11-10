@@ -17,7 +17,7 @@ yum -y install yum-utils
 # yum-config-manager --enable mysql55-community
 # 5.6 is the default so do nothing
 
-yum -y install mysql-community-server percona-xtrabackup
+yum -y install mysql-community-server percona-xtrabackup-22
 
 BASE_MY_CNF_FILE="/etc/my.cnf"
 MYSQL_CNF_DIR="/etc/mysql/"

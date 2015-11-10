@@ -7,4 +7,3 @@ set -e
 set -o xtrace
 
 dnf -y install percona-xtrabackup
-

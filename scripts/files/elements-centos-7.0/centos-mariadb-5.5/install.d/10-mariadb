@@ -8,7 +8,7 @@ set -o xtrace
 
 mkdir /var/lib/mysql
 
-yum -y install MariaDB-server MariaDB-client percona-xtrabackup
+yum -y install MariaDB-server MariaDB-client percona-xtrabackup-22
 
 BASE_MY_CNF_FILE="/etc/my.cnf"
 MYSQL_CNF_DIR="/etc/mysql/"

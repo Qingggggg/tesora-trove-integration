@@ -3,7 +3,7 @@ set -o xtrace
 
 yum install -y wget
 
-wget http://packages.couchbase.com/releases/3.0.1/couchbase-server-community-3.0.1-centos6.x86_64.rpm
+wget -q http://packages.couchbase.com/releases/3.0.1/couchbase-server-community-3.0.1-centos6.x86_64.rpm
 
 rpm --install couchbase-server-community-3.0.1-centos6.x86_64.rpm
 
