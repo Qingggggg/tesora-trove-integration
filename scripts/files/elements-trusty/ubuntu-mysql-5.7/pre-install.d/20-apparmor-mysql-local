@@ -13,3 +13,9 @@ cat <<EOF >>/etc/apparmor.d/local/usr.sbin.mysqld
   /sys/devices/system/node/ r,
   /sys/devices/system/node/** r,
 EOF
+
+# TEMP
+# It appears that the mysql 5.7 install apparmor config file is
+# missing the #include for the local one. So we need to add it here
+
+sed -i "/^}/i #include <local/usr.sbin.mysqld>" /etc/apparmor.d/usr.sbin.mysqld
