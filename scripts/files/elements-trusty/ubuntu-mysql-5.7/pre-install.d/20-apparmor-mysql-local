@@ -8,4 +8,8 @@ set -e
 cat <<EOF >>/etc/apparmor.d/local/usr.sbin.mysqld
   /tmp/ rw,
   /tmp/** rwk,
+
+  /proc/*/status  r,
+  /sys/devices/system/node/ r,
+  /sys/devices/system/node/** r,
 EOF
