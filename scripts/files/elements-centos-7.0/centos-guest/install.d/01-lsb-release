@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# CONTEXT: GUEST during CONSTRUCTION as ROOT
-# PURPOSE: add the lsb_release scipt
-
-set -e
-set -o xtrace
-
-yum install -y redhat-lsb-core

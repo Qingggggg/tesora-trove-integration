@@ -1,6 +1,0 @@
-#!/bin/bash
-
-set -e
-set -o xtrace
-
-yum -y install http://rdoproject.org/repos/openstack-liberty/rdo-release-liberty.rpm

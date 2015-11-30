@@ -1,8 +1,0 @@
-#!/bin/bash
-set -e
-set -o xtrace
-
-# CONTEXT: HOST after IMAGE BUILD as SCRIPT USER
-# PURPOSE: Set the loopback network in host file
-
-echo "127.0.0.1 localhost" >> /etc/hosts

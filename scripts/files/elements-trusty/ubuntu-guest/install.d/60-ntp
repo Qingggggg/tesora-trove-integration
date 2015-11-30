@@ -1,8 +1,0 @@
-# Set up Network Time Protocol
-ntpfile=`mktemp`
-cat << EOF > $ntpfile
-server ntp.ubuntu.com iburst
-EOF
-mv /etc/ntp.conf /etc/ntp.conf.orig
-mv $ntpfile /etc/ntp.conf
-service ntp restart
