@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# CONTEXT: GUEST during CONSTRUCTION as ROOT
-# PURPOSE: add the lsb_release scipt
-
-set -e
-set -o xtrace
-
-yum -y erase Percona-Server-shared-56
