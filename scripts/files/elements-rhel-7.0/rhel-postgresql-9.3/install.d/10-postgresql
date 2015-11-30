@@ -18,7 +18,7 @@ sed -i 's/PGDATA=\/var\/lib\/pgsql\/9.3\/data/PGDATA=\/var\/lib\/postgresql\/9.3
 echo "d /var/run/postgresql/ 0755 postgres postgres" > /lib/tmpfiles.d/postgresql.conf
 
 # Install the native Python client.
-yum install -y postgresql-devel python-devel
+yum install -y postgresql93-devel python-devel
 pip install psycopg2
 
 systemctl enable postgresql.service

@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# CONTEXT: GUEST during CONSTRUCTION as ROOT
+# PURPOSE: Install controller base required packages
+
+set -e
+set -o xtrace
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-key adv --keyserver pgp.mit.edu --recv-keys 5072E1F5
+
+cat <<EOL > /etc/apt/sources.list.d/mysql.list
+deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.7
+EOL
+
+apt-get -y update
+
+apt-get -y install libmysqlclient18 mysql-server-5.7 percona-xtrabackup-22
+
+# TEMP
+# It appears that the mysql 5.7 install apparmor config file is
+# missing the #include for the local one. So we need to add it here
+
+sed -i "/^}/i #include <local/usr.sbin.mysqld>" /etc/apparmor.d/usr.sbin.mysqld
