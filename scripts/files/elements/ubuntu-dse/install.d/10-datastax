@@ -12,7 +12,10 @@ vm.max_map_count = 131072
 
 _EOF_
 
-echo "deb http://debian.datastax.com/community stable main" >> /etc/apt/sources.list.d/cassandra.sources.list
+DATASTAX_USER="andrew_tesora.com"
+DATASTAX_PWD="cSIwj8bK6d33ih4"
+
+echo "deb http://${DATASTAX_USER}:${DATASTAX_PWD}@debian.datastax.com/enterprise stable main" >> /etc/apt/sources.list.d/datastax.sources.list
 
 apt-get install -qy wget
 wget -q -O - http://debian.datastax.com/debian/repo_key | apt-key add -
@@ -21,7 +24,7 @@ apt-get update
 
 apt-get install -y openjdk-7-jre python-dev
 
-apt-get install -y dsc21=2.1.* cassandra=2.1.*
+apt-get install -y dse-full=4.8.*
 
 # The Python Driver 2.0 for Apache Cassandra.
 pip install cassandra-driver
