@@ -22,5 +22,5 @@ pip install cassandra-driver blist
 # Create a volatile directory for PID.
 echo "d /var/run/cassandra/ 0755 cassandra cassandra" > /lib/tmpfiles.d/cassandra.conf
 
-systemctl start cassandra
-chkconfig cassandra on
+systemctl start dse
+chkconfig dse on
