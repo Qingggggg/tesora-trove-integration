@@ -12,7 +12,7 @@ vm.max_map_count = 131072
 
 _EOF_
 
-yum install dse-full-4.8.*
+yum -y install dse-full-4.8.*
 
 pip install -U setuptools
 
