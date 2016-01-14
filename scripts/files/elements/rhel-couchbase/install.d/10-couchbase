@@ -1,0 +1,24 @@
+set -e
+set -o xtrace
+
+cat > "/etc/rc.local" << _EOF_
+# Make sure to disable Linux kernel feature transparent huge pages,
+# it will affect greatly both memory usage and latency in a negative way.
+# See: http://docs.couchbase.com/admin/admin/Install/rhel-installing.html
+if test -f /sys/kernel/mm/redhat_transparent_hugepage/defrag; then
+  echo never > /sys/kernel/mm/redhat_transparent_hugepage/defrag
+fi
+if test -f /sys/kernel/mm/redhat_transparent_hugepage/enabled; then
+  echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+fi
+
+exit \$?
+
+_EOF_
+
+yum clean metadata
+yum makecache
+
+# Install the community package.
+# Do not start when finished.
+INSTALL_DONT_START_SERVER=1 yum -y install "http://packages.couchbase.com/releases/3.0.1/couchbase-server-community-3.0.1-centos6.x86_64.rpm"
