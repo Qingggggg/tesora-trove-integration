@@ -2,7 +2,30 @@ set -e
 set -o xtrace
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get install -qy curl
-apt-get install -qy libssl0.9.8
-curl -O http://packages.couchbase.com/releases/2.2.0/couchbase-server-community_2.2.0_x86_64.deb
-INSTALL_DONT_START_SERVER=1 dpkg -i couchbase-server-community_2.2.0_x86_64.deb
+
+cat > "/etc/rc.local" << _EOF_
+# Make sure to disable Linux kernel feature transparent huge pages,
+# it will affect greatly both memory usage and latency in a negative way.
+# See: http://docs.couchbase.com/admin/admin/Install/rhel-installing.html
+if test -f /sys/kernel/mm/transparent_hugepage/defrag; then
+  echo never > /sys/kernel/mm/transparent_hugepage/defrag
+fi
+if test -f /sys/kernel/mm/transparent_hugepage/enabled; then
+  echo never > /sys/kernel/mm/transparent_hugepage/enabled
+fi
+
+exit \$?
+
+_EOF_
+
+apt-get -qy update
+apt-get -qy install curl
+
+# Download and install the community package.
+# Do not start when finished.
+COUCHBASE_PACKAGE="couchbase-server-community_3.0.1-ubuntu12.04_amd64.deb"
+curl -O "http://packages.couchbase.com/releases/3.0.1/$COUCHBASE_PACKAGE"
+INSTALL_DONT_START_SERVER=1 dpkg -i "$COUCHBASE_PACKAGE"
+
+# Remove the installation package.
+rm -f "$COUCHBASE_PACKAGE"
