@@ -569,6 +569,8 @@ function cmd_set_datastore() {
         VERSION="10.5"
     elif [ "$DATASTORE_TYPE" == "oracle" ]; then
         VERSION="11.2"
+    elif [ "$DATASTORE_TYPE" == "oracle_ra" ]; then
+        VERSION="12.1"
     elif [ "$DATASTORE_TYPE" == "dse" ]; then
         VERSION="4.8"
     else
