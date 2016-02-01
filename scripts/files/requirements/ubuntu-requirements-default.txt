@@ -24,4 +24,4 @@ oslo.utils>=1.1.0
 osprofiler>=0.3.0
 oslo.concurrency>=0.3.0
 cassandra-driver>=2.1.4 # Apache-2.0
-enum34;python_version=='2.7' or python_version=='2.6'
+enum34;python_version=='2.7' or python_version=='2.6' or python_version=='3.3'  # BSD
