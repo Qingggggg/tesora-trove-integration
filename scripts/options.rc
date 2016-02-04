@@ -13,3 +13,4 @@ export TROVE_GIT_BASE=https://github.com
 export TROVE_REPO=${TROVE_GIT_BASE}/Tesora/tesora-trove.git
 export TROVECLIENT_REPO=${TROVE_GIT_BASE}/Tesora/tesora-python-troveclient.git
 export REQUIREMENTS_REPO=${TROVE_GIT_BASE}/Tesora/tesora-requirements.git
+export TROVEDASHBOARD_REPO=${TROVE_GIT_BASE}/Tesora/tesora-trove-dashboard.git
