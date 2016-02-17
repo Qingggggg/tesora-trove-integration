@@ -658,6 +658,13 @@ function mod_confs() {
     if [ -e $EXTRA_CONF ]; then
         cat $EXTRA_CONF >> $TEST_CONF
     fi
+    # Append datastore specific configuration file
+    DATASTORE_CONF=$REDSTACK_SCRIPTS/conf/$DATASTORE_TYPE.conf
+    if [ ! -f $DATASTORE_CONF ]; then
+        exclaim "Datastore configuration file ${DATASTORE_CONF} not found"
+        exit 1
+    fi
+    cat $DATASTORE_CONF | sudo tee -a $TEST_CONF > /dev/null
     cat $REDSTACK_SCRIPTS/conf/test_end.conf | sudo tee -a $TEST_CONF > /dev/null
 
     #Add the paths to the test conf
@@ -721,51 +728,24 @@ function mod_confs() {
 
     if [ "$DATASTORE_TYPE" = "vertica" ]; then
         # Vertica needs more time than mysql for its boot/start/stop operations.
-        setup_cluster_configs
-        # Setting flavor to be >= 2GB RAM for Vertica guest instances in test.conf.
-        INSTANCE_FLAVOR="test.large"
-        BIGGER_INSTANCE_FLAVOR="test.large.resize"
-        # Setting cluster_member_count to 2 to decrease cluster spawn time.
-        iniset $TROVE_CONF $DATASTORE_TYPE cluster_member_count 2
+        setup_cluster_configs 3
     elif [ "$DATASTORE_TYPE" = "pxc" ]; then
-        setup_cluster_configs
-    elif [[ "$DATASTORE_TYPE" = "cassandra" || "$DATASTORE_TYPE" = "dse" ]]; then
-        setup_cluster_configs
-        INSTANCE_FLAVOR="test.large"
-        BIGGER_INSTANCE_FLAVOR="test.large.resize"
+        setup_cluster_configs 2
+    elif [ "$DATASTORE_TYPE" = "cassandra" ]; then
+        setup_cluster_configs 2
     elif [ "$DATASTORE_TYPE" = "mongodb" ]; then
-        setup_cluster_configs
-        INSTANCE_FLAVOR="test.large"
-        BIGGER_INSTANCE_FLAVOR="test.large.resize"
+        setup_cluster_configs 2
         # Decrease the number of required config servers per cluster to save resources.
         iniset $TROVE_CONF $DATASTORE_TYPE num_config_servers_per_cluster 1
-        # MongoDB require replicas require 5GB data volume.
-        # Increase the Cinder backing file size to accommodate at least 8 such volumes.
-        TROVE_VOLUME_SIZE="5"
-        export VOLUME_BACKING_FILE_SIZE="50G"
-    elif [[ "$DATASTORE_TYPE" = "couchbase" || "$DATASTORE_TYPE" = "couchdb" || "$DATASTORE_TYPE" = "redis" ]]; then
-        INSTANCE_FLAVOR="test.tiny"
-        BIGGER_INSTANCE_FLAVOR="test.tiny.resize"
     fi
-
-    sed -i "s/%trove_volume_support%/$TROVE_VOLUME_SUPPORT/g" $TEST_CONF
-    sed -i "s/%trove_volume_size%/$TROVE_VOLUME_SIZE/g" $TEST_CONF
-
-    sed -i "s/%instance_flavor%/$INSTANCE_FLAVOR/g" $TEST_CONF
-    sed -i "s/%eph_instance_flavor%/$EPH_INSTANCE_FLAVOR/g" $TEST_CONF
-    sed -i "s/%bigger_instance_flavor%/$BIGGER_INSTANCE_FLAVOR/g" $TEST_CONF
-    sed -i "s/%bigger_eph_instance_flavor%/$BIGGER_EPH_INSTANCE_FLAVOR/g" $TEST_CONF
 
     set_bin_path
 
 }
 
 function setup_cluster_configs() {
-    # Some generic cluster-related configurations required by the tests to run.
-    iniset $TROVE_TASKMANAGER_CONF DEFAULT agent_call_high_timeout 300
-    iniset $TROVE_TASKMANAGER_CONF DEFAULT cluster_usage_timeout 2000
-    iniset $TROVE_TASKMANAGER_CONF DEFAULT resize_time_out 900
-    iniset $TROVE_TASKMANAGER_CONF DEFAULT usage_timeout 1500
+    # Setting cluster_member_count to 2 to decrease cluster spawn time.
+    iniset $TROVE_CONF $DATASTORE_TYPE cluster_member_count $1
 }
 
 function add_test_flavors() {
@@ -782,11 +762,11 @@ function add_test_flavors() {
     add_flavor 'test.eph.small' 17 768 3 1 1
     add_flavor 'test.eph.small.resize' 18 784 3 2 1
 
-    add_flavor 'test.large' 19 2048 3 1 0
-    add_flavor 'test.large.resize' 20 2064 3 2 0
+    add_flavor 'test.large' 19 2048 5 1 0
+    add_flavor 'test.large.resize' 20 2064 5 2 0
 
-    add_flavor 'test.eph.large' 21 2048 3 1 1
-    add_flavor 'test.eph.large.resize' 22 2064 3 2 1
+    add_flavor 'test.eph.large' 21 2048 5 1 1
+    add_flavor 'test.eph.large.resize' 22 2064 5 2 1
 }
 
 function cmd_test_init() {
