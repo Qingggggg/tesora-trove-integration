@@ -25,6 +25,7 @@ _EOF_
 
 yum clean metadata
 yum makecache
+yum install curl
 
 # Install the community package.
 # Do not start when finished.
