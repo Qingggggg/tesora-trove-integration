@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+set -o xtrace
+
+[ -n "$TMP_HOOKS_PATH." ] || die "Temp hook path not set"
+
+COUCHBASE_PACKAGE="couchbase-server-community_3.0.1-ubuntu12.04_amd64.deb"
+curl -o "$TMP_HOOKS_PATH/$COUCHBASE_PACKAGE" "http://packages.couchbase.com/releases/3.0.1/$COUCHBASE_PACKAGE"

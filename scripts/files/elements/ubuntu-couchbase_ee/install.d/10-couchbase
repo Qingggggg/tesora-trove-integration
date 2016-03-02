@@ -30,5 +30,5 @@ apt-get -qy install curl
 
 # Install deb package
 # Do not start instance when installation is complete
-COUCHBASE_PACKAGE="/tmp/in_target.d/couchbase-server-community_3.0.1-ubuntu12.04_amd64.deb"
+COUCHBASE_PACKAGE="/tmp/in_target.d/couchbase-server-enterprise-4.1.0-ubuntu14.04_amd64.deb"
 INSTALL_DONT_START_SERVER=1 dpkg -i "$COUCHBASE_PACKAGE"
