@@ -204,7 +204,7 @@ chmod a+x /home/oracle/scripts/*
 cat <<EOT >> /usr/lib/systemd/system/dbora.service
 [Unit]
 Description=The Oracle Database Service
-After=syslog.target network.target
+After=syslog.target network.target cloud-final.service
 
 [Service]
 Type=simple
