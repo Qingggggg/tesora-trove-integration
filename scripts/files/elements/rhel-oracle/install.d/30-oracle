@@ -184,35 +184,18 @@ export PATH=\$PATH:\$ORACLE_HOME/bin
 export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$ORACLE_HOME/lib
 EOT
 
-mkdir -p /home/oracle/scripts
-cat <<EOT >> /home/oracle/scripts/startup.sh
-#!/bin/bash
-export ORACLE_HOME=$ORACLE_HOME
-export ORACLE_HOME_LISTNER=$ORACLE_HOME
-$ORACLE_HOME/bin/lsnrctl start
-$ORACLE_HOME/bin/dbstart
-EOT
-
-cat <<EOT >> /home/oracle/scripts/shutdown.sh
-#!/bin/bash
-$ORACLE_HOME/bin/dbshut
-$ORACLE_HOME/bin/lsnrctl stop
-EOT
-
-chmod a+x /home/oracle/scripts/*
-
 cat <<EOT >> /usr/lib/systemd/system/dbora.service
 [Unit]
 Description=The Oracle Database Service
 After=syslog.target network.target cloud-final.service
 
 [Service]
-Type=simple
-RemainAfterExit=yes
+Environment="ORACLE_HOME=$ORACLE_HOME"
+Type=forking
 User=oracle
 Group=oinstall
-ExecStart=/home/oracle/scripts/startup.sh
-ExecStop=/home/oracle/scripts/shutdown.sh
+ExecStart=$ORACLE_HOME/bin/dbstart \$ORACLE_HOME
+ExecStop=$ORACLE_HOME/bin/dbshut \$ORACLE_HOME
 
 [Install]
 WantedBy=multi-user.target
