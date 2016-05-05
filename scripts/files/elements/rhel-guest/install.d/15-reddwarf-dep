@@ -6,7 +6,6 @@
 set -e
 set -o xtrace
 
-yum -y install http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
 yum -y update
 
 yum install -y python-devel libxml2-devel libxslt-devel python-setuptools \
