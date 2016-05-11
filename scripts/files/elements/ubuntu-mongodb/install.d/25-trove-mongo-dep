@@ -1,9 +1,6 @@
-#!/bin/bash
-
-# CONTEXT: GUEST during CONSTRUCTION as ROOT
-# PURPOSE: Install trove guest python dependencies - see redstack functions_qemu
+#!/bin/sh
 
 set -e
 set -o xtrace
 
-pip install pymongo>=3.2.0
+pip install pymongo
