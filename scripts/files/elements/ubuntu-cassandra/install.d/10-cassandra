@@ -17,9 +17,12 @@ echo "deb http://debian.datastax.com/community stable main" >> /etc/apt/sources.
 apt-get install -qy wget
 wget -q -O - http://debian.datastax.com/debian/repo_key | apt-key add -
 
+#This repo is needed to install 'openjdk-8-jre'
+add-apt-repository -y ppa:openjdk-r/ppa
+
 apt-get update
 
-apt-get install -y openjdk-7-jre python-dev
+apt-get install -y openjdk-8-jre python-dev
 
 apt-get install -y dsc21=2.1.* cassandra=2.1.*
 
