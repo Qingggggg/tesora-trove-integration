@@ -23,9 +23,12 @@ gpg --export --armor 2B5C1B00 | sudo apt-key add -
 gpg --keyserver pgp.mit.edu --recv-keys 0353B12C
 gpg --export --armor 0353B12C | sudo apt-key add -
 
+#This repo is needed to install 'openjdk-8-jre'
+add-apt-repository -y ppa:openjdk-r/ppa
+
 apt-get update
 
-apt-get install -y openjdk-7-jre python-dev
+apt-get install -y openjdk-8-jre python-dev
 
 apt-get install -y cassandra
 
