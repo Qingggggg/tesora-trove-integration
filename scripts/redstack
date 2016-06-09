@@ -693,7 +693,20 @@ function rd_manage() {
 }
 
 function install_test_packages() {
+    DATASTORE_TYPE=$1
+
     sudo -H $HTTP_PROXY pip install openstack.nose_plugin proboscis pexpect
+
+    if [ "$DATASTORE_TYPE" = "couchbase" ] ||
+           [ "$DATASTORE_TYPE" = "couchbase_4" ] ||
+           [ "$DATASTORE_TYPE" = "couchbase_ee" ]; then
+        # Install Couchbase SDK for scenario tests.
+        sudo -H $HTTP_PROXY curl http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add -
+        echo "deb http://packages.couchbase.com/ubuntu trusty trusty/main" | sudo tee /etc/apt/sources.list.d/couchbase-csdk.list
+        sudo -H $HTTP_PROXY apt-get update
+        sudo -H $HTTP_PROXY apt-get -y install libcouchbase-dev
+        sudo -H $HTTP_PROXY pip install --upgrade couchbase
+    fi
 }
 
 function mod_confs() {
@@ -826,7 +839,7 @@ function cmd_test_init() {
     exclaim 'Initializing Configuration for Running Tests...'
 
     exclaim "Installing python test packages."
-    install_test_packages
+    install_test_packages $1
 
     exclaim "Modifying test.conf and guest.conf with appropriate values."
     mod_confs $1
@@ -1225,13 +1238,6 @@ function cmd_dsvm_gate_tests() {
     sudo -H $HTTP_PROXY pip install --upgrade pip dib-utils
     sudo -H $HTTP_PROXY apt-get -y install libpq-dev
     sudo -H $HTTP_PROXY pip install --upgrade -c "$DEST/requirements/upper-constraints.txt" -r "$PATH_TROVE/test-requirements.txt"
-
-    # Install Couchbase SDK for scenario tests.
-    sudo -H $HTTP_PROXY curl http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add -
-    echo "deb http://packages.couchbase.com/ubuntu trusty trusty/main" | sudo tee /etc/apt/sources.list.d/couchbase-csdk.list
-    sudo -H $HTTP_PROXY apt-get update
-    sudo -H $HTTP_PROXY apt-get -y install libcouchbase-dev
-    sudo -H $HTTP_PROXY pip install --upgrade couchbase
 
     cmd_kick_start $DATASTORE_TYPE
 
