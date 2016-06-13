@@ -569,6 +569,8 @@ function cmd_set_datastore() {
         set_mysql_pkg
         PACKAGES=${PACKAGES:-$MYSQL_PKG}
         VERSION="5.6"
+    elif [ "$DATASTORE_TYPE" == "mysql_ee" ]; then
+        VERSION="5.6"
     elif [ "$DATASTORE_TYPE" == "percona" ]; then
         PACKAGES=${PACKAGES:-"percona-server-server-5.6"}
         VERSION="5.6"
