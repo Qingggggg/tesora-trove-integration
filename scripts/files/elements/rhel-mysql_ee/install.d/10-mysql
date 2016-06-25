@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# CONTEXT: GUEST during CONSTRUCTION as ROOT
+# PURPOSE: Install controller base required packages
+
+set -e
+set -o xtrace
+
+yum -y install libaio perl perl-Data-Dumper perl-Digest-MD5
+
+groupadd mysql
+useradd -r -g mysql mysql
+
+yum -y remove mariadb-libs*
+rpm -i /tmp/in_target.d/MySQL-shared-advanced*.rpm
+rpm -i /tmp/in_target.d/MySQL-server-advanced*.rpm
+rpm -i /tmp/in_target.d/MySQL-client-advanced*.rpm
+rpm -i /tmp/in_target.d/meb*.rpm
+ln -s /opt/mysql/meb-3.12/bin/mysqlbackup /usr/local/bin/mysqlbackup
+
+# percona xtrabackup
+wget https://www.percona.com/downloads/XtraBackup/Percona-XtraBackup-2.3.2/binary/redhat/7/x86_64/percona-xtrabackup-2.3.2-1.el7.x86_64.rpm
+yum -y localinstall percona-xtrabackup-2.3.2-1.el7.x86_64.rpm
+rm -f yum percona-xtrabackup-2.3.2-1.el7.x86_64.rpm
+
+mysql_install_db --user=mysql
+
+# DBAAS-904 - code expects /etc/my.cnf and /etc/mysql/conf.d
+BASE_MY_CNF_FILE="/etc/my.cnf"
+MYSQL_CONF_D_DIR="/etc/mysql/conf.d"
+mkdir -p "$MYSQL_CONF_D_DIR"
+
+cp /usr/share/mysql/my-default.cnf $BASE_MY_CNF_FILE
+
+echo "!includedir $MYSQL_CONF_D_DIR" >> "$BASE_MY_CNF_FILE"
+
+chkconfig --del mysql
