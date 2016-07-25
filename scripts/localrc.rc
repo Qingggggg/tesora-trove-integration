@@ -84,3 +84,4 @@ VOLUME_BACKING_FILE_SIZE=${VOLUME_BACKING_FILE_SIZE}
 # to force lock_path to /tmp.
 EXTRA_OPTS=(lock_path=$USERHOME/nova_locks rescan_timeout=180 resizefs_timeout=240 force_dhcp_release=False)
 UNDO_REQUIREMENTS=False
+SETUPTOOLS_SYS_PATH_TECHNIQUE=rewrite
