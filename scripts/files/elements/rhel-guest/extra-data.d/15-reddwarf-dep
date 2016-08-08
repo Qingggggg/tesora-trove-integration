@@ -8,9 +8,25 @@ set -o xtrace
 
 source $_LIB/die
 
-REQUIREMENTS_FILE=${REDSTACK_SCRIPTS}/files/requirements/rhel-requirements-default.txt
+BRANCH_OVERRIDE=${BRANCH_OVERRIDE:-default}
+ADD_BRANCH=$(basename ${BRANCH_OVERRIDE})
+REQUIREMENTS_FILE=${REDSTACK_SCRIPTS}/files/requirements/rhel-requirements-${ADD_BRANCH}.txt
 
-[ -n "$TMP_HOOKS_PATH." ] || die "Temp hook path not set"
+[ -n "$TMP_HOOKS_PATH" ] || die "Temp hook path not set"
 [ -e ${REQUIREMENTS_FILE} ] || die "Requirements not found"
+[ -n "$HOST_USERNAME" ] || die "HOST_USERNAME not set"
 
 sudo -Hiu ${HOST_USERNAME} dd if=${REQUIREMENTS_FILE} of=${TMP_HOOKS_PATH}/requirements.txt
+
+# Grab the upper constraints file, but don't fail if we can't find it
+UC_DIR=$(pwd)
+UC_FILE=upper-constraints.txt
+UC_BRANCH=${BRANCH_OVERRIDE}
+if [ "${ADD_BRANCH}" == "default" ]; then
+    UC_BRANCH=master
+fi
+set +e; curl -o "${UC_DIR}/${UC_FILE}" https://raw.githubusercontent.com/Tesora/tesora-requirements/${UC_BRANCH}/${UC_FILE}; set -e
+if [ -f "${UC_DIR}/${UC_FILE}" ]; then
+    sudo -Hiu ${HOST_USERNAME} dd if="${UC_DIR}/${UC_FILE}" of=${TMP_HOOKS_PATH}/${UC_FILE}
+    rm -f "${UC_DIR}/${UC_FILE}"
+fi
