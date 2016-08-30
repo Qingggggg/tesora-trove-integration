@@ -85,17 +85,21 @@ export TROVE_API_PASTE_INI=$TROVE_CONF_DIR/api-paste.ini
 export TEST_CONF=$TROVE_CONF_DIR/test.conf
 
 # Public facing bits
-[[ $ENABLE_NEUTRON = true ]] && BRIDGE_IP=172.24.4.1 || BRIDGE_IP=10.0.0.1
 SERVICE_PROTOCOL=${SERVICE_PROTOCOL:-http}
-NETWORK_GATEWAY=${NETWORK_GATEWAY:-$BRIDGE_IP}
 NETWORK_INTERFACE=${NETWORK_INTERFACE:-eth0}
 NETWORK_SUBNET=${NETWORK_SUBNET:-10.0.0.0/24}
+NETWORK_GATEWAY=${NETWORK_GATEWAY:-10.0.0.1}
+BRIDGE_IP=${BRIDGE_IP:-172.24.4.1}
 KEYSTONE_AUTH_HOST=${KEYSTONE_AUTH_HOST:-$SERVICE_HOST}
 KEYSTONE_AUTH_PROTOCOL=${KEYSTONE_AUTH_PROTOCOL:-$SERVICE_PROTOCOL}
 KEYSTONE_AUTH_PORT=${KEYSTONE_AUTH_PORT:-35357}
 GLANCE_HOSTPORT=${GLANCE_HOSTPORT:-$SERVICE_HOST:9292}
 GLANCE_SERVICE_PROTOCOL=${GLANCE_SERVICE_PROTOCOL:-http}
 TROVE_AUTH_ENDPOINT=$KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:$KEYSTONE_AUTH_PORT/v2.0
+
+# The following depends on whether neutron is used or nova-network
+# neutron uses a bridge, nova-network does not
+[[ $ENABLE_NEUTRON = true ]] && CONTROLLER_IP=$BRIDGE_IP || CONTROLLER_IP=$NETWORK_GATEWAY
 
 # PATH_TROVE more than likely has file separators, which sed does not like
 # This will escape them
@@ -753,24 +757,11 @@ function mod_confs() {
     # If neutron is enabled, we create a shared network and write this info to the
     # confs so that the integration tests can use it.
     if [[ $ENABLE_NEUTRON = true ]]; then
-        # customer_network_id=$(neutron net-list | awk '/customer/ {print $2}')
-        # if [[ -z "$customer_network_id" ]]; then
-        #    customer_network_id=$(neutron net-create customer | awk '/ id / {print $4}')
-        #    customer_subnet_id=$(neutron subnet-create customer 10.0.1.0/24 --no-gateway | awk '/ id / {print $4}')
-        # fi
-        management_network_id=$(neutron --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT net-list | awk '/private/ {print $2}')
-        management_subnet=$(neutron --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT net-list | awk '/private/ {print $7}')
+        management_network_id=$(neutron --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT net-list | awk '/ alt-private / {print $2}')
+        management_subnet=$(neutron --os-username=admin --os-password=$ADMIN_PASSWORD --os-tenant-name=admin --os-auth-url=$TROVE_AUTH_ENDPOINT subnet-list | awk '/ alt-private-subnet / {print $2}')
+        echo "Using neutron network $management_network_id and subnet $management_subnet"
         sed -i "s,%shared_network%,$management_network_id,g" $TEST_CONF
         sed -i "s,%shared_network_subnet%,$management_subnet,g" $TEST_CONF
-        # sed -i "s,%private_network%,$customer_network_id,g" $TEST_CONF
-        # sed -i "s,%private_network_subnet%,10.0.1.0/24,g" $TEST_CONF
-        iniset $TROVE_CONF DEFAULT network_label_regex .*
-        iniset $TROVE_CONF DEFAULT ip_regex .*
-        iniset $TROVE_CONF DEFAULT black_list_regex ^10.0.1.*
-        iniset $TROVE_CONF DEFAULT default_neutron_networks $management_network_id
-        iniset $TROVE_CONF DEFAULT network_driver trove.network.neutron.NeutronDriver
-        iniset $TROVE_TASKMANAGER_CONF DEFAULT network_driver trove.network.neutron.NeutronDriver
-        iniset $TROVE_TASKMANAGER_CONF mysql tcp_ports 22,3306
     else
         # do not leave invalid keys in the configuration when using Nova for networking
         sed -i "/%shared_network%/d" $TEST_CONF
@@ -1204,6 +1195,51 @@ function cmd_clear() {
     cmd_wipe_queues
 }
 
+function exec_cmd_on_output() {
+    local output_cmd=$1
+    local exec_cmd=$2
+    local skip_id=${3:-""}
+
+    echo "Cleaning up objects from '${output_cmd}'"
+    exec $output_cmd|awk -vexec_cmd="$exec_cmd" -vskip_id="$skip_id" '{if (NR>3 && $2!="" && $2!=skip_id && $2!="|") { cmd = exec_cmd " " $2; print "Executing " cmd; system(cmd) } }'
+}
+
+
+function cmd_clean() {
+    echo "Cleaning up project '${OS_PROJECT_NAME}'"
+    # reset any stuck backups
+    mysql_trove "update backups set state='COMPLETED'"
+    # clear out any DS version metadata
+    mysql_trove "delete from datastore_version_metadata"
+    # reset any stuck instances, and clear all replicas
+    mysql_trove "update instances set task_id=2, slave_of_id=null"
+    # reset any stuck clusters
+    mysql_trove "update clusters set task_id=1"
+    # get rid of any extraneous quota usage
+    mysql_trove "delete from quota_usages"
+
+    source $PATH_DEVSTACK_SRC/openrc admin ${OS_PROJECT_NAME}
+    # delete any trove clusters
+    exec_cmd_on_output "trove cluster-list" "trove cluster-delete"
+    # delete any trove instances
+    exec_cmd_on_output "trove list" "trove delete"
+    # delete any backups
+    exec_cmd_on_output "trove backup-list" "trove backup-delete"
+    # sleep for a bit and then clean up
+    # any remaining nova instances or cinder volumes
+    sleep 5
+    exec_cmd_on_output "nova list" "nova delete"
+    sleep 2
+    exec_cmd_on_output "cinder list" "cinder delete"
+    # delete any config groups since all instances should be gone now
+    exec_cmd_on_output "trove configuration-list" "trove configuration-delete"
+    # delete any modules too
+    exec_cmd_on_output "trove module-list" "trove module-delete"
+    # make sure that security groups are also gone, except the default
+    exec_cmd_on_output "nova secgroup-list" "nova secgroup-delete" "1"
+    echo "If any errors occurred wait a few seconds and run the command again"
+}
+
 function cmd_kick_start() {
     cmd_test_init $1
     cmd_build_and_upload_image $1
@@ -1214,7 +1250,7 @@ function cmd_dsvm_gate_tests() {
     TEST_GROUP=${2:-${DATASTORE_TYPE}}
     HOST_SCP_USERNAME=${3:-'jenkins'}
     GUEST_USERNAME=${4:-'ubuntu'}
-    NETWORK_GATEWAY=${5:-'10.1.0.1'}
+    CONTROLLER_IP=${5:-'10.1.0.1'}
     ESCAPED_PATH_TROVE=${6:-'\/opt\/stack\/new\/trove'}
 
     if is_branch_liberty $BRANCH_OVERRIDE; then
@@ -1233,8 +1269,8 @@ function cmd_dsvm_gate_tests() {
 
     sudo chown -R $(whoami) /etc/trove
     sudo chown -R $(whoami) $DEST/trove-integration
-    iniset $TROVE_GUESTAGENT_CONF DEFAULT rabbit_host $NETWORK_GATEWAY
-    iniset $TROVE_GUESTAGENT_CONF oslo_messaging_rabbit rabbit_hosts $NETWORK_GATEWAY
+    iniset $TROVE_GUESTAGENT_CONF DEFAULT rabbit_host $CONTROLLER_IP
+    iniset $TROVE_GUESTAGENT_CONF oslo_messaging_rabbit rabbit_hosts $CONTROLLER_IP
     cd $DEST/trove-integration/scripts
 
     # Install required packages.
@@ -1244,22 +1280,21 @@ function cmd_dsvm_gate_tests() {
 
     cmd_kick_start $DATASTORE_TYPE
 
-    set -x
-    # Update the local swift endpoint in the catalog to use the NETWORK_GATEWAY instead of 127.0.0.1
+    # Update the local swift endpoint in the catalog to use the CONTROLLER_IP instead of 127.0.0.1
     source $DEST/devstack/accrc/admin/admin
     # NOTE(mriedem): We have to treat stable branches before liberty special
     # due to constraints with older versions of python-openstackclient.
     if is_branch_juno_kilo $BRANCH_OVERRIDE; then
         SWIFT_ENDPOINT=$(openstack endpoint list | grep 'swift' | get_field 1)
-        openstack endpoint create swift --region RegionOne --publicurl 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' \
-            --internalurl 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' --adminurl 'http://'$NETWORK_GATEWAY':8080'
+        openstack endpoint create swift --region RegionOne --publicurl 'http://'$CONTROLLER_IP':8080/v1/AUTH_$(tenant_id)s' \
+            --internalurl 'http://'$CONTROLLER_IP':8080/v1/AUTH_$(tenant_id)s' --adminurl 'http://'$CONTROLLER_IP':8080'
         openstack endpoint delete $SWIFT_ENDPOINT
     else
         OS_CLIENT_ARGS="--os-auth-type v3password --os-auth-url $KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:5000/v3 --os-identity-api-version=3"
         SWIFT_ENDPOINTS=$(openstack endpoint list $OS_CLIENT_ARGS --service swift -c ID -f value)
-        openstack endpoint create $OS_CLIENT_ARGS swift public 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' --region RegionOne
-        openstack endpoint create $OS_CLIENT_ARGS swift internal 'http://'$NETWORK_GATEWAY':8080/v1/AUTH_$(tenant_id)s' --region RegionOne
-        openstack endpoint create $OS_CLIENT_ARGS swift admin 'http://'$NETWORK_GATEWAY':8080' --region RegionOne
+        openstack endpoint create $OS_CLIENT_ARGS swift public 'http://'$CONTROLLER_IP':8080/v1/AUTH_$(tenant_id)s' --region RegionOne
+        openstack endpoint create $OS_CLIENT_ARGS swift internal 'http://'$CONTROLLER_IP':8080/v1/AUTH_$(tenant_id)s' --region RegionOne
+        openstack endpoint create $OS_CLIENT_ARGS swift admin 'http://'$CONTROLLER_IP':8080' --region RegionOne
         echo $SWIFT_ENDPOINTS | xargs -n 1 openstack endpoint delete $OS_CLIENT_ARGS
     fi
     set +x
@@ -1386,6 +1421,7 @@ function print_usage() {
           rd-sql          - Opens the Trove MySQL database.
           vagrant-ssh     - Runs a command from the host on the server.
           clear           - Destroy instances and rabbit queues.
+          clean           - Clean up resources created by a failed test run.
           run             - Starts RD but not in a screen.
           run-fake        - Runs the server in fake mode.
           update-projects - Git pull on all the daemons trove dependencies.
@@ -1423,6 +1459,7 @@ function run_command() {
         "debug" ) shift; echo "Enabling debugging."; \
                   set -o xtrace; run_command $@;;
         "clear" ) shift; cmd_clear $@;;
+        "clean" ) shift; cmd_clean $@;;
         "run" ) shift; cmd_run $@;;
         "kick-start" ) shift; cmd_kick_start $@;;
         "dsvm-gate-tests" ) shift; cmd_dsvm_gate_tests $@;;

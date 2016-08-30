@@ -7,6 +7,7 @@ extras
 python-novaclient>=2.18.0
 python-swiftclient>=2.2.0
 python-cinderclient>=1.1.0
+python-glanceclient
 kombu>=2.5.0
 six>=1.7.0
 babel

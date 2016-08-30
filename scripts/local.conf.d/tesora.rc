@@ -9,3 +9,7 @@ if [ x"$SMOKE_TEST" != x"" ]; then
     disable_service tempest
 fi
 
+[[post-config|\$TROVE_TASKMANAGER_CONF]]
+[DEFAULT]
+use_nova_server_config_drive = True
+
