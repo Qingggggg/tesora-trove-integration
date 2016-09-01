@@ -566,6 +566,7 @@ function set_mysql_pkg() {
 function cmd_set_datastore() {
     IMAGEID=$1
     DATASTORE_TYPE=$2
+    DATASTORE_MANAGER=$DATASTORE_TYPE
     # rd_manage datastore_update <datastore_name> <default_version>
     rd_manage datastore_update "$DATASTORE_TYPE" ""
     PACKAGES=${PACKAGES:-""}
@@ -624,6 +625,10 @@ function cmd_set_datastore() {
         VERSION="4.8"
     elif [ "$DATASTORE_TYPE" == "couchbase_ee" ]; then
         VERSION="4.1"
+        DATASTORE_MANAGER="couchbase_4"
+    elif [ "$DATASTORE_TYPE" == "couchbase_ee45" ]; then
+        VERSION="4.5"
+        DATASTORE_MANAGER="couchbase_4"
     elif [ "$DATASTORE_TYPE" == "edb" ]; then
         VERSION="9.4"
     else
@@ -635,14 +640,14 @@ function cmd_set_datastore() {
     sed -i "s/%datastore_version%/$VERSION/g" $TEST_CONF
 
     #rd_manage datastore_version_update <datastore_name> <version_name> <datastore_manager> <image_id> <packages> <active>
-    rd_manage datastore_version_update "$DATASTORE_TYPE" "$VERSION" "$DATASTORE_TYPE" $IMAGEID "$PACKAGES" 1
+    rd_manage datastore_version_update "$DATASTORE_TYPE" "$VERSION" "$DATASTORE_MANAGER" $IMAGEID "$PACKAGES" 1
     rd_manage datastore_version_update "$DATASTORE_TYPE" "inactive_version" "manager1" $IMAGEID "" 0
     rd_manage datastore_update "$DATASTORE_TYPE" "$VERSION"
     rd_manage datastore_update Test_Datastore_1 ""
 
     if [ -f "$PATH_TROVE"/trove/templates/$DATASTORE_TYPE/validation-rules.json ]; then
         # add the configuration parameters to the database for the kick-start datastore
-        rd_manage db_load_datastore_config_parameters "$DATASTORE_TYPE" "$VERSION" "$PATH_TROVE"/trove/templates/$DATASTORE_TYPE/validation-rules.json
+        rd_manage db_load_datastore_config_parameters "$DATASTORE_TYPE" "$VERSION" "$PATH_TROVE"/trove/templates/$DATASTORE_MANAGER/validation-rules.json
     fi
 
     cmd_stop
@@ -705,7 +710,8 @@ function install_test_packages() {
 
     if [ "$DATASTORE_TYPE" = "couchbase" ] ||
            [ "$DATASTORE_TYPE" = "couchbase_4" ] ||
-           [ "$DATASTORE_TYPE" = "couchbase_ee" ]; then
+           [ "$DATASTORE_TYPE" = "couchbase_ee" ] ||
+           [ "$DATASTORE_TYPE" = "couchbase_ee45" ]; then
         # Install Couchbase SDK for scenario tests.
         sudo -H $HTTP_PROXY curl http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add -
         echo "deb http://packages.couchbase.com/ubuntu trusty trusty/main" | sudo tee /etc/apt/sources.list.d/couchbase-csdk.list
