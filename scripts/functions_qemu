@@ -72,7 +72,7 @@ function build_guest_image() {
     fi
     SERVICE_TYPE=$1
     VALID_SERVICES='mysql percona mariadb redis cassandra cassandra_22 cassandra_3 couchbase couchbase_4 mongodb postgresql couchdb vertica db2 pxc mysql_ee'
-    VALID_SERVICES="$VALID_SERVICES oracle oracle_ra dse couchbase_ee edb"
+    VALID_SERVICES="$VALID_SERVICES oracle oracle_ra dse couchbase_ee couchbase_ee45 edb"
     if ! [[ " $VALID_SERVICES " =~ " $SERVICE_TYPE " ]]; then
         exclaim "You did not pass in a valid image type. Valid types are:" $VALID_SERVICES
         exit 1
