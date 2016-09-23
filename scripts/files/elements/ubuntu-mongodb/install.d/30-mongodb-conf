@@ -9,6 +9,11 @@ rm -f /var/run/mongodb.pid
 
 cat > /etc/mongod.conf << '_EOF_'
 storage.dbPath: /var/lib/mongodb
+<<<<<<< HEAD
+=======
+security.authorization: enabled
+storage.engine: wiredTiger
+>>>>>>> upstream/master
 storage.journal.enabled: true
 systemLog.destination: file
 systemLog.logAppend: true
@@ -17,6 +22,7 @@ _EOF_
 
 
 cat > /etc/mongos.conf << '_EOF_'
+security.authorization: enabled
 systemLog.destination: file
 systemLog.logAppend: true
 systemLog.path: /var/log/mongodb/mongos.log
