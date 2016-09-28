@@ -628,10 +628,10 @@ function cmd_set_datastore() {
         VERSION="4.8"
     elif [ "$DATASTORE_TYPE" == "couchbase_ee" ]; then
         VERSION="4.1"
-        DATASTORE_MANAGER="couchbase_4"
+        DATASTORE_MANAGER="couchbase_ee"
     elif [ "$DATASTORE_TYPE" == "couchbase_ee45" ]; then
         VERSION="4.5"
-        DATASTORE_MANAGER="couchbase_4"
+        DATASTORE_MANAGER="couchbase_ee"
     elif [ "$DATASTORE_TYPE" == "edb" ]; then
         VERSION="9.4"
     else
