@@ -30,8 +30,5 @@ apt-get -qy install curl
 
 # Install deb package
 # Do not start instance when installation is complete
-COUCHBASE_PACKAGE="/tmp/in_target.d/couchbase-server-enterprise_4.5.0-ubuntu14.04_amd64.deb"
+COUCHBASE_PACKAGE="/tmp/in_target.d/couchbase-server-enterprise_4.5.1-ubuntu14.04_amd64.deb"
 INSTALL_DONT_START_SERVER=1 dpkg -i "$COUCHBASE_PACKAGE"
-
-# This should be no longer necessary once 4.5.1 gets released.
-patch /opt/couchbase/lib/python/info.py < "$(dirname $0)/files/dbaas-2166.patch"
