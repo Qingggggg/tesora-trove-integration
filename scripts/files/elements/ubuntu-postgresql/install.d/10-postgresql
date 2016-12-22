@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 set -o xtrace
@@ -31,50 +31,61 @@ exit \$?
 
 _EOF_
 
-apt-get -y install postgresql-9.4 postgresql-contrib-9.4 postgresql-server-dev-9.4
+apt-get -y install postgresql-${VERSION} postgresql-contrib-${VERSION}
 
-rm -rf "/var/lib/postgresql/9.4/main/"
-su - postgres -c "/usr/lib/postgresql/9.4/bin/initdb --encoding=UTF8 --locale=en_US.UTF8 /var/lib/postgresql/9.4/main/"
-###########################################
-# Hack alert:
-# For Postgresql 9.4, pg_rewind is not in the main source tree and
-# no packages exist in the repos, so it must be compiled manually
-# and installed on the image until we can move to 9.5
-# See README at
-# https://github.com/vmware/pg_rewind/tree/REL9_4_STABLE
+rm -rf "/var/lib/postgresql/${VERSION}/main/"
+su - postgres -c "/usr/lib/postgresql/${VERSION}/bin/initdb --encoding=UTF8 --locale=en_US.UTF8 /var/lib/postgresql/${VERSION}/main/"
 
-tmpdir=/tmp/build
-mkdir -p $tmpdir
-cd $tmpdir
-git clone https://github.com/postgres/postgres.git --branch REL9_4_STABLE
-cd postgres/contrib
-git clone https://github.com/vmware/pg_rewind.git --branch REL9_4_STABLE
+if [[ "$VERSION" == "9.4" ]]; then
+    apt-get -y install postgresql-server-dev-9.4
 
-dev_pkgs="libreadline-dev libkrb5-dev libssl-dev libpam-dev libxml2-dev libxslt-dev libedit-dev libselinux1-dev bison flex"
+    ###########################################
+    # Hack alert:
+    # For Postgresql 9.4, pg_rewind is not in the main source tree and
+    # no packages exist in the repos, so it must be compiled manually
+    # and installed on the image until we can move to 9.5
+    # See README at
+    # https://github.com/vmware/pg_rewind/tree/REL9_4_STABLE
 
-apt-get install $dev_pkgs -y
+    tmpdir=/tmp/build
+    mkdir -p $tmpdir
+    cd $tmpdir
+    git clone https://github.com/postgres/postgres.git --branch REL9_4_STABLE
+    cd postgres/contrib
+    git clone https://github.com/vmware/pg_rewind.git --branch REL9_4_STABLE
 
-# Unfortunately, on ubuntu, was not able to get pg_rewind to build
-# outside of the pgsql source tree. Configure and compile postgres
-# but only call make install against the contrib/pg_rewind directory
-# so that support library is accessible to the server
-cd $tmpdir/postgres
-./configure 
-make
-cd contrib/pg_rewind
-make install
+    dev_pkgs="libreadline-dev libkrb5-dev libssl-dev libpam-dev libxml2-dev libxslt-dev libedit-dev libselinux1-dev bison flex"
 
-# Make the pg_rewind binary and the library used by the 
-# pg_rewind stored procedures accessible
-ln -s /usr/local/pgsql/bin/pg_rewind /usr/bin/pg_rewind
-ln -s /usr/local/pgsql/lib/pg_rewind_support.so /usr/lib/postgresql/9.4/lib/pg_rewind_support.so
+    apt-get install $dev_pkgs -y
 
-cd
-rm -rf $tmpdir
-apt-get remove -y $dev_pkgs
+    # Unfortunately, on ubuntu, was not able to get pg_rewind to build
+    # outside of the pgsql source tree. Configure and compile postgres
+    # but only call make install against the contrib/pg_rewind directory
+    # so that support library is accessible to the server
+    cd $tmpdir/postgres
+    ./configure
+    make
+    cd contrib/pg_rewind
+    make install
 
-# End hack
-################################
+    # Make the pg_rewind binary and the library used by the
+    # pg_rewind stored procedures accessible
+    ln -s /usr/local/pgsql/bin/pg_rewind /usr/bin/pg_rewind
+    ln -s /usr/local/pgsql/lib/pg_rewind_support.so /usr/lib/postgresql/9.4/lib/pg_rewind_support.so
+
+    cd
+    rm -rf $tmpdir
+    apt-get remove -y $dev_pkgs
+
+    # End hack
+    ################################
+else
+    # We need to create a symlink from the installed version of
+    # pg_rewind to /usr/bin (The assumption is that this will
+    # only be done for versions >9.4 i.e. I don't believe we
+    # support 9.3 anymore.)
+    ln -s /usr/lib/postgresql/${VERSION}/bin/pg_rewind /usr/bin/pg_rewind
+fi
 
 # Install the native Python client.
 apt-get -y install libpq-dev
